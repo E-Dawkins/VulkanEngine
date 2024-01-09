@@ -131,6 +131,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>D:\Libraries\VulkanSDK_1_3_268\Include;D:\Libraries\glfw-3.3.9.bin.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -149,6 +150,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>D:\Libraries\VulkanSDK_1_3_268\Include;D:\Libraries\glfw-3.3.9.bin.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
