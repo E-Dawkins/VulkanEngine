@@ -2,6 +2,7 @@
 #include <optional>
 #include <vector>
 
+class Material_Base;
 class Mesh;
 
 const std::vector VALIDATION_LAYERS =
@@ -66,6 +67,7 @@ public:
 
     static VkDevice GetDevice() { return m_device; }
     static VkPhysicalDevice GetPhysicalDevice() { return m_physicalDevice; }
+    static float GetSwapchainRatio() { return static_cast<float>(m_swapChainExtent.width) / static_cast<float>(m_swapChainExtent.height); }
 
     static void CreateBuffer(VkDeviceSize _size, VkBufferUsageFlags _usage, VkMemoryPropertyFlags _properties, VkBuffer& _buffer, VkDeviceMemory& _bufferMemory);
     static uint32_t FindMemoryType(uint32_t _typeFilter, VkMemoryPropertyFlags _properties);
@@ -81,10 +83,13 @@ public:
 private:
     void InitWindow();
     void InitVulkan();
-    void InitMeshes();
-    void InitUbo();
     void MainLoop();
     void Cleanup() const;
+    
+    void InitMaterials();
+    void InitMeshes();
+    
+    void CleanupResources() const;
 
     void CreateInstance();
     void SetupDebugMessenger();
@@ -95,22 +100,17 @@ private:
     void RecreateSwapChain();
     void CreateImageViews();
     void CreateRenderPass();
-    void CreateDescriptorSetLayout();
     void CreateGraphicsPipeline();
     void CreateCommandPool() const;
     void CreateColorResources();
     void CreateDepthResources();
     void CreateFrameBuffers();
-    void CreateUniformBuffers();
-    void CreateDescriptorPool();
-    void CreateDescriptorSets();
     void CreateCommandBuffers();
     void CreateSyncObjects();
     void DrawFrame();
     void RecordCommandBuffer(VkCommandBuffer _commandBuffer, uint32_t _imageIndex) const;
     void CleanupSwapChain() const;
-    void UpdateUniformBuffer(uint32_t _currentImage);
-    static VkShaderModule CreateShaderModule(const std::vector<char>& _code);
+    void UpdateUniformBuffer(uint32_t _currentImage) const;
     VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& _capabilities) const;
     static VkFormat FindSupportedFormat(const std::vector<VkFormat>& _candidates, VkImageTiling _tiling, VkFormatFeatureFlags _features);
     static VkFormat FindDepthFormat();
@@ -129,7 +129,6 @@ private:
     static void FrameBufferResizeCallback(GLFWwindow* _window, int _width, int _height);
     static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT _messageSeverity, VkDebugUtilsMessageTypeFlagsEXT _messageType,
                                                         const VkDebugUtilsMessengerCallbackDataEXT* _pCallbackData, void* _pUserData);
-    static std::vector<char> ReadFile(const std::string& _filename);
     
 private:
     int m_width = 800;
@@ -149,10 +148,9 @@ private:
     VkSwapchainKHR m_swapChain{};
     std::vector<VkImage> m_swapChainImages{};
     VkFormat m_swapChainImageFormat{};
-    VkExtent2D m_swapChainExtent{};
+    inline static VkExtent2D m_swapChainExtent{};
     std::vector<VkImageView> m_swapChainImageViews{};
     VkRenderPass m_renderPass{};
-    VkDescriptorSetLayout m_descriptorSetLayout{};
     VkPipelineLayout m_pipelineLayout{};
     VkPipeline m_graphicsPipeline{};
     std::vector<VkFramebuffer> m_swapChainFrameBuffers{};
@@ -171,22 +169,9 @@ private:
     VkImage m_colorImage{};
     VkDeviceMemory m_colorImageMemory{};
     VkImageView m_colorImageView{};
-
-    std::vector<VkBuffer> m_uniformBuffers{};
-    std::vector<VkDeviceMemory> m_uniformBuffersMemory{};
-    std::vector<void*> m_uniformBuffersMapped{};
-    VkDescriptorPool m_descriptorPool{};
-    std::vector<VkDescriptorSet> m_descriptorSets{};
     
     uint32_t m_currentFrame = 0;
-
-    struct UniformBufferObject
-    {
-        alignas(16) glm::mat4 model;
-        alignas(16) glm::mat4 view;
-        alignas(16) glm::mat4 proj;
-    };
-
-    UniformBufferObject m_ubo{};
+    
     Mesh* m_mesh = nullptr;
+    Material_Base* m_material = nullptr;
 };

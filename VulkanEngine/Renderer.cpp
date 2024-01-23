@@ -6,7 +6,6 @@
 #include <chrono>
 #include <cstdint>
 #include <cstring>
-#include <fstream>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
@@ -14,6 +13,8 @@
 #include <optional>
 #include <set>
 
+#include "Material_Base.h"
+#include "Material_Unlit.h"
 #include "Mesh.h"
 
 
@@ -54,7 +55,9 @@ void Renderer::InitVulkan()
     CreateSwapChain();
     CreateImageViews();
     CreateRenderPass();
-    CreateDescriptorSetLayout();
+    
+    InitMaterials();
+    
     CreateGraphicsPipeline();
     CreateCommandPool();
     CreateColorResources();
@@ -62,28 +65,32 @@ void Renderer::InitVulkan()
     CreateFrameBuffers();
 
     InitMeshes();
-    InitUbo();
     
-    CreateUniformBuffers();
-    CreateDescriptorPool();
-    CreateDescriptorSets();
     CreateCommandBuffers();
     CreateSyncObjects();
 }
 
-void Renderer::InitMeshes()
+void Renderer::InitMaterials()
 {
-    m_mesh = new Mesh("models/viking_room.obj", "textures/viking_room.png");
-    m_mesh->transform.position = glm::vec3(0, 0, 0.5f);
-    m_mesh->transform.scale = glm::vec3(.5f);
+    m_material = new Material_Unlit("shaders/unlit.vert.spv", "shaders/unlit.frag.spv");
+    dynamic_cast<Material_Unlit*>(m_material)->pushConstants.color = glm::vec4(1);
+    m_material->Init();
 }
 
-void Renderer::InitUbo()
+void Renderer::InitMeshes()
 {
-    m_ubo.model = m_mesh->transform.GetMatrix();
-    m_ubo.view = lookAt(glm::vec3(2), glm::vec3(0), glm::vec3(0.f, 0.f, 1.f));
-    m_ubo.proj = glm::perspective(glm::radians(45.f), static_cast<float>(m_swapChainExtent.width) / static_cast<float>(m_swapChainExtent.height), 0.1f, 10.f);
-    m_ubo.proj[1][1] *= -1;
+    dynamic_cast<Material_Unlit*>(m_material)->texture = new Texture("textures/viking_room.png");
+    m_material->CreateGraphicsResources();
+    
+    m_mesh = new Mesh("models/viking_room.obj");
+    m_mesh->transform.scale = glm::vec3(.5f);
+    m_mesh->material = m_material;
+}
+
+void Renderer::CleanupResources() const
+{
+    delete m_material;
+    delete m_mesh;
 }
 
 void Renderer::MainLoop()
@@ -100,17 +107,7 @@ void Renderer::MainLoop()
 void Renderer::Cleanup() const
 {
     CleanupSwapChain();
-
-    m_mesh->Cleanup();
-        
-    for (int i = 0; i < m_maxFramesInFlight; i++)
-    {
-        vkDestroyBuffer(m_device, m_uniformBuffers[i], nullptr);
-        vkFreeMemory(m_device, m_uniformBuffersMemory[i], nullptr);
-    }
-
-    vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
-    vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
+    CleanupResources();
 
     vkDestroyPipeline(m_device, m_graphicsPipeline, nullptr);
     vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
@@ -468,54 +465,18 @@ void Renderer::CreateRenderPass()
     }
 }
 
-void Renderer::CreateDescriptorSetLayout()
-{
-    VkDescriptorSetLayoutBinding uboLayoutBinding;
-    uboLayoutBinding.binding = 0;
-    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboLayoutBinding.descriptorCount = 1;
-    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    uboLayoutBinding.pImmutableSamplers = nullptr; // optional
-
-    VkDescriptorSetLayoutBinding samplerLayoutBinding;
-    samplerLayoutBinding.binding = 1;
-    samplerLayoutBinding.descriptorCount = 1;
-    samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    samplerLayoutBinding.pImmutableSamplers = nullptr;
-    samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    const std::array bindings = {uboLayoutBinding, samplerLayoutBinding};
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-    layoutInfo.pBindings = bindings.data();
-
-    if (vkCreateDescriptorSetLayout(m_device, &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create descriptor set layout!");
-    }
-}
-
 void Renderer::CreateGraphicsPipeline()
 {
-    // TODO - Move shader logic into material class
-    auto vertShaderCode = ReadFile("shaders/shader.vert.spv");
-    auto fragShaderCode = ReadFile("shaders/shader.frag.spv");
-
-    VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
-    VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
-
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertShaderStageInfo.module = vertShaderModule;
+    vertShaderStageInfo.module = m_material->GetVertShaderModule();
     vertShaderStageInfo.pName = "main"; // shader entry point
 
     VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
     fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragShaderStageInfo.module = fragShaderModule;
+    fragShaderStageInfo.module = m_material->GetFragShaderModule();
     fragShaderStageInfo.pName = "main"; // shader entry point
 
     VkPipelineShaderStageCreateInfo shaderStages[] =
@@ -624,12 +585,14 @@ void Renderer::CreateGraphicsPipeline()
     colorBlending.blendConstants[2] = 0.f; // optional
     colorBlending.blendConstants[3] = 0.f; // optional
 
+    auto pushConstantRanges = m_material->GetPushConstantRanges();
+    
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
-    pipelineLayoutInfo.pushConstantRangeCount = 0; // optional
-    pipelineLayoutInfo.pPushConstantRanges = nullptr; // optional
+    pipelineLayoutInfo.pSetLayouts = m_material->GetDescriptorSetLayout();
+    pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRanges.size());
+    pipelineLayoutInfo.pPushConstantRanges = pushConstantRanges.data();
 
     if (vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS)
     {
@@ -659,44 +622,8 @@ void Renderer::CreateGraphicsPipeline()
         throw std::runtime_error("failed to create graphics pipeline!");
     }
     
-    vkDestroyShaderModule(m_device, fragShaderModule, nullptr);
-    vkDestroyShaderModule(m_device, vertShaderModule, nullptr);
-}
-
-std::vector<char> Renderer::ReadFile(const std::string& _filename)
-{
-    std::ifstream file(_filename, std::ios::ate | std::ios::binary);
-
-    if (!file.is_open())
-    {
-        throw std::runtime_error("failed to open file!");
-    }
-
-    const size_t fileSize = file.tellg();
-    std::vector<char> buffer(fileSize);
-
-    file.seekg(0);
-    file.read(buffer.data(), static_cast<std::streamsize>(fileSize));
-
-    file.close();
-
-    return buffer;
-}
-
-VkShaderModule Renderer::CreateShaderModule(const std::vector<char>& _code)
-{
-    VkShaderModuleCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = _code.size();
-    createInfo.pCode = reinterpret_cast<const uint32_t*>(_code.data());
-
-    VkShaderModule shaderModule;
-    if (vkCreateShaderModule(m_device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create shader module!");
-    }
-
-    return shaderModule;
+    vkDestroyShaderModule(m_device, m_material->GetFragShaderModule(), nullptr);
+    vkDestroyShaderModule(m_device, m_material->GetVertShaderModule(), nullptr);
 }
 
 void Renderer::CreateCommandPool() const
@@ -767,93 +694,6 @@ void Renderer::CreateFrameBuffers()
         {
             throw std::runtime_error("failed to create frame buffer!");
         }
-    }
-}
-
-void Renderer::CreateUniformBuffers()
-{
-    m_uniformBuffers.resize(m_maxFramesInFlight);
-    m_uniformBuffersMemory.resize(m_maxFramesInFlight);
-    m_uniformBuffersMapped.resize(m_maxFramesInFlight);
-
-    for (int i = 0; i < m_maxFramesInFlight; i++)
-    {
-        constexpr VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-        
-        CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                     m_uniformBuffers[i], m_uniformBuffersMemory[i]);
-
-        vkMapMemory(m_device, m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBuffersMapped[i]);
-    }
-}
-
-void Renderer::CreateDescriptorPool()
-{
-    std::array<VkDescriptorPoolSize, 2> poolSizes{};
-    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = static_cast<uint32_t>(m_maxFramesInFlight);
-    poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = static_cast<uint32_t>(m_maxFramesInFlight);
-
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-    poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = static_cast<uint32_t>(m_maxFramesInFlight);
-
-    if (vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create descriptor pool!");
-    }
-}
-
-void Renderer::CreateDescriptorSets()
-{
-    const std::vector layouts(m_maxFramesInFlight, m_descriptorSetLayout);
-    VkDescriptorSetAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = m_descriptorPool;
-    allocInfo.descriptorSetCount = static_cast<uint32_t>(m_maxFramesInFlight);
-    allocInfo.pSetLayouts = layouts.data();
-
-    m_descriptorSets.resize(m_maxFramesInFlight);
-    if (vkAllocateDescriptorSets(m_device, &allocInfo, m_descriptorSets.data()) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to allocate descriptor sets!");
-    }
-
-    for (int i = 0; i < m_maxFramesInFlight; i++)
-    {
-        VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = m_uniformBuffers[i];
-        bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(UniformBufferObject);
-
-        VkDescriptorImageInfo imageInfo{};
-        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = m_mesh->GetTextureImageView();
-        imageInfo.sampler = m_mesh->GetTextureSampler();
-
-        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[0].dstSet = m_descriptorSets[i];
-        descriptorWrites[0].dstBinding = 0;
-        descriptorWrites[0].dstArrayElement = 0;
-        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrites[0].descriptorCount = 1;
-        descriptorWrites[0].pBufferInfo = &bufferInfo;
-
-        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[1].dstSet = m_descriptorSets[i];
-        descriptorWrites[1].dstBinding = 1;
-        descriptorWrites[1].dstArrayElement = 0;
-        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptorWrites[1].descriptorCount = 1;
-        descriptorWrites[1].pImageInfo = &imageInfo;
-
-        vkUpdateDescriptorSets(m_device, descriptorWrites.size(),
-            descriptorWrites.data(), 0, nullptr);
     }
 }
 
@@ -1196,9 +1036,7 @@ void Renderer::RecordCommandBuffer(const VkCommandBuffer _commandBuffer, uint32_
     scissor.extent = m_swapChainExtent;
     vkCmdSetScissor(_commandBuffer, 0, 1, &scissor);
 
-    vkCmdBindDescriptorSets(_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSets[m_currentFrame], 0, nullptr);
-
-    m_mesh->DrawMesh(_commandBuffer);
+    m_mesh->DrawMesh(_commandBuffer, m_pipelineLayout);
     
     vkCmdEndRenderPass(_commandBuffer);
     
@@ -1231,17 +1069,14 @@ void Renderer::CleanupSwapChain() const
     vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
 }
 
-void Renderer::UpdateUniformBuffer(const uint32_t _currentImage)
+void Renderer::UpdateUniformBuffer(const uint32_t _currentImage) const
 {
     static auto startTime = std::chrono::high_resolution_clock::now();
 
     const auto currentTime = std::chrono::high_resolution_clock::now();
-    const float time = std::chrono::duration<float>(currentTime - startTime).count();
+    const float deltaTime = std::chrono::duration<float>(currentTime - startTime).count();
 
-    // Rotate the mesh over time by 90 degrees per second
-    m_ubo.model = rotate(m_mesh->transform.GetMatrix(), time * glm::radians(30.f), glm::vec3(0.f, 0.f, 1.f));
-
-    memcpy(m_uniformBuffersMapped[_currentImage], &m_ubo, sizeof(m_ubo));
+    m_mesh->UpdateMesh(deltaTime);
 }
 
 VkCommandBuffer Renderer::BeginSingleTimeCommands()
