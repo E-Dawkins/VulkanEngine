@@ -3,18 +3,12 @@
 class Material_Base
 {
 public:
-    Material_Base(std::string _vertexShaderPath, std::string _fragmentShaderPath);
+    Material_Base(std::string _vertexShaderPath, std::string _fragmentShaderPath, VkRenderPass _renderPass);
     virtual ~Material_Base();
 
     void Init();
-    void CreateGraphicsResources();
-    virtual void RenderMaterial(VkCommandBuffer _commandBuffer, VkPipelineLayout _pipelineLayout) const;
+    virtual void RenderMaterial(VkCommandBuffer _commandBuffer) const;
     void UpdateMaterial();
-
-    VkDescriptorSetLayout* GetDescriptorSetLayout() { return &m_descriptorSetLayout; }
-    VkShaderModule GetVertShaderModule() const { return m_vertShaderModule; }
-    VkShaderModule GetFragShaderModule() const { return m_fragShaderModule; }
-    std::vector<VkPushConstantRange> GetPushConstantRanges() { return m_pushConstantRanges; }
     
 private:
     void LoadShaderModules();
@@ -23,6 +17,7 @@ private:
     void CreateUniformBuffer();
     void CreateDescriptorPool();
     void CreateDescriptorSetLayout();
+    virtual void CreateGraphicsPipeline();
     void CreateDescriptorSets();
 
 protected:
@@ -43,6 +38,9 @@ protected:
     std::string m_vertexShaderPath;
     std::string m_fragmentShaderPath;
 
+    VkShaderModule m_vertShaderModule{};
+    VkShaderModule m_fragShaderModule{};
+
     VkBuffer m_uniformBuffer{};
     VkDeviceMemory m_uniformBufferMemory{};
     void* m_uniformBufferMapped{};
@@ -53,6 +51,7 @@ protected:
 
     std::vector<VkPushConstantRange> m_pushConstantRanges{};
 
-    VkShaderModule m_vertShaderModule{};
-    VkShaderModule m_fragShaderModule{};
+    VkPipelineLayout m_pipelineLayout{};
+    VkPipeline m_graphicsPipeline{};
+    VkRenderPass m_renderPass;
 };

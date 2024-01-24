@@ -68,6 +68,8 @@ public:
     static VkDevice GetDevice() { return m_device; }
     static VkPhysicalDevice GetPhysicalDevice() { return m_physicalDevice; }
     static float GetSwapchainRatio() { return static_cast<float>(m_swapChainExtent.width) / static_cast<float>(m_swapChainExtent.height); }
+    static VkExtent2D GetSwapchainExtent() { return m_swapChainExtent; }
+    static VkSampleCountFlagBits GetMsaaSampleCount() { return m_msaaSamples; }
 
     static void CreateBuffer(VkDeviceSize _size, VkBufferUsageFlags _usage, VkMemoryPropertyFlags _properties, VkBuffer& _buffer, VkDeviceMemory& _bufferMemory);
     static uint32_t FindMemoryType(uint32_t _typeFilter, VkMemoryPropertyFlags _properties);
@@ -100,7 +102,6 @@ private:
     void RecreateSwapChain();
     void CreateImageViews();
     void CreateRenderPass();
-    void CreateGraphicsPipeline();
     void CreateCommandPool() const;
     void CreateColorResources();
     void CreateDepthResources();
@@ -151,8 +152,6 @@ private:
     inline static VkExtent2D m_swapChainExtent{};
     std::vector<VkImageView> m_swapChainImageViews{};
     VkRenderPass m_renderPass{};
-    VkPipelineLayout m_pipelineLayout{};
-    VkPipeline m_graphicsPipeline{};
     std::vector<VkFramebuffer> m_swapChainFrameBuffers{};
     inline static VkCommandPool m_commandPool{};
     std::vector<VkCommandBuffer> m_commandBuffers{};
@@ -160,7 +159,7 @@ private:
     std::vector<VkSemaphore> m_renderFinishedSemaphores{};
     std::vector<VkFence> m_inFlightFences{};
 
-    VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
+    inline static VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
     VkImage m_depthImage{};
     VkDeviceMemory m_depthImageMemory{};

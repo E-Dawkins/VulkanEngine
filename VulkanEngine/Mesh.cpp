@@ -8,11 +8,21 @@
 
 #include "Material_Base.h"
 
-Mesh::Mesh(std::string _meshPath) : m_meshPath(std::move(_meshPath))
+Mesh::Mesh(std::string _meshPath, const bool _logLoadTime) : m_meshPath(std::move(_meshPath))
 {
+    const auto startTime = high_resolution_clock::now();
+    
     LoadModel();
     CreateVertexBuffer();
     CreateIndexBuffer();
+
+    const auto endTime = high_resolution_clock::now();
+
+    if (_logLoadTime)
+    {
+        const float totalTime = static_cast<int16_t>(duration<float, milliseconds::period>(endTime - startTime).count());
+        std::cout << "Mesh at \"" << m_meshPath << "\" loaded in " << totalTime << "ms" << std::endl;
+    }
 }
 
 Mesh::~Mesh()
@@ -24,9 +34,9 @@ Mesh::~Mesh()
     vkFreeMemory(Renderer::GetDevice(), m_vertexBufferMemory, nullptr);
 }
 
-void Mesh::DrawMesh(const VkCommandBuffer _commandBuffer, VkPipelineLayout _pipelineLayout) const
+void Mesh::DrawMesh(const VkCommandBuffer _commandBuffer) const
 {
-    material->RenderMaterial(_commandBuffer, _pipelineLayout);
+    material->RenderMaterial(_commandBuffer);
     
     const VkBuffer vertexBuffers[] = {m_vertexBuffer};
     constexpr VkDeviceSize offsets[] = {0};

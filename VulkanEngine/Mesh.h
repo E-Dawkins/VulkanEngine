@@ -6,10 +6,10 @@ class Material_Base;
 class Mesh
 {
 public:
-    Mesh(std::string _meshPath);
+    Mesh(std::string _meshPath, bool _logLoadTime = false);
     ~Mesh();
 
-    void DrawMesh(VkCommandBuffer _commandBuffer, VkPipelineLayout _pipelineLayout) const;
+    void DrawMesh(VkCommandBuffer _commandBuffer) const;
     void UpdateMesh(float _deltaTime);
 
 private:
@@ -60,15 +60,16 @@ public:
 private:
     std::string m_meshPath;
 
+    std::vector<Vertex> m_vertices{};
     VkBuffer m_vertexBuffer{};
     VkDeviceMemory m_vertexBufferMemory{};
+    
+    std::vector<uint32_t> m_indices{};
     VkBuffer m_indexBuffer{};
     VkDeviceMemory m_indexBufferMemory{};
-
-    std::vector<Vertex> m_vertices{};
-    std::vector<uint32_t> m_indices{};
 };
 
+// Hash implementation - needed to use Mesh::Vertex within an unordered set / map
 template <>
 struct std::hash<Mesh::Vertex>
 {

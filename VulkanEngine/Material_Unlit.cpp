@@ -2,17 +2,19 @@
 #include "Material_Unlit.h"
 
 #include "Renderer.h"
+#include "TextureSampler.h"
 
 Material_Unlit::~Material_Unlit()
 {
-    delete texture;
+    delete m_textureSampler;
+    delete m_texture;
 }
 
-void Material_Unlit::RenderMaterial(VkCommandBuffer _commandBuffer, VkPipelineLayout _pipelineLayout) const
+void Material_Unlit::RenderMaterial(VkCommandBuffer _commandBuffer) const
 {
-    Material_Base::RenderMaterial(_commandBuffer, _pipelineLayout);
+    Material_Base::RenderMaterial(_commandBuffer);
     
-    vkCmdPushConstants(_commandBuffer, _pipelineLayout, m_pushConstantRanges[0].stageFlags, m_pushConstantRanges[0].offset, m_pushConstantRanges[0].size, &pushConstants);
+    vkCmdPushConstants(_commandBuffer, m_pipelineLayout, m_pushConstantRanges[0].stageFlags, m_pushConstantRanges[0].offset, m_pushConstantRanges[0].size, &pushConstants);
 }
 
 void Material_Unlit::AppendSetLayoutBindings(std::vector<VkDescriptorSetLayoutBinding>& _bindings)
@@ -39,8 +41,8 @@ void Material_Unlit::AppendExtraDescriptorWrites(std::vector<VkWriteDescriptorSe
     // Add write descriptor set for texture sampler
     auto* imageInfo = new VkDescriptorImageInfo();
     imageInfo->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imageInfo->imageView = texture->GetImageView();
-    imageInfo->sampler = texture->GetSampler();
+    imageInfo->imageView = m_texture->GetImageView();
+    imageInfo->sampler = m_textureSampler->Sampler();
 
     _descriptorWrites.emplace_back();
     _descriptorWrites.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

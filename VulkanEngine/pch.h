@@ -18,5 +18,8 @@
 #include <GLFW/glfw3native.h>
 
 #include <array>
+#include <chrono>
 #include <iostream>
 #include <string>
+
+using namespace std::chrono;
