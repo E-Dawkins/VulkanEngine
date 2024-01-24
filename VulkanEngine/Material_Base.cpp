@@ -112,14 +112,11 @@ void Material_Base::CreateDescriptorPool()
     std::vector<VkDescriptorPoolSize> poolSizes{};
 
     poolSizes.emplace_back();
-    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = 1;
+    poolSizes.back().type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSizes.back().descriptorCount = 1;
 
     // Per material pool sizes (i.e. texture samplers, other uniforms, etc.)
-    const auto extraPoolSizes = GetExtraPoolSizes();
-
-    // Combine base + extra pool sizes
-    poolSizes.insert(poolSizes.end(), extraPoolSizes.begin(), extraPoolSizes.end());
+    AppendExtraPoolSizes(poolSizes);
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -139,17 +136,14 @@ void Material_Base::CreateDescriptorSetLayout()
     std::vector<VkDescriptorSetLayoutBinding> bindings{};
 
     bindings.emplace_back();
-    bindings[0].binding = 0;
-    bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    bindings[0].descriptorCount = 1;
-    bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    bindings[0].pImmutableSamplers = nullptr; // optional
+    bindings.back().binding = 0;
+    bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    bindings.back().descriptorCount = 1;
+    bindings.back().stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    bindings.back().pImmutableSamplers = nullptr; // optional
 
     // Per material bindings (i.e. texture samplers, other uniforms, etc.)
-    const auto extraBindings = GetSetLayoutBindings();
-
-    // Combine base + extra bindings
-    bindings.insert(bindings.end(), extraBindings.begin(), extraBindings.end());
+    AppendSetLayoutBindings(bindings);
     
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -184,16 +178,16 @@ void Material_Base::CreateDescriptorSets()
     bufferInfo.range = sizeof(UniformBufferObject);
     
     descriptorWrites.emplace_back();
-    descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrites[0].dstSet = m_descriptorSet;
-    descriptorWrites[0].dstBinding = 0;
-    descriptorWrites[0].dstArrayElement = 0;
-    descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    descriptorWrites[0].descriptorCount = 1;
-    descriptorWrites[0].pBufferInfo = &bufferInfo;
+    descriptorWrites.back().sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites.back().dstSet = m_descriptorSet;
+    descriptorWrites.back().dstBinding = 0;
+    descriptorWrites.back().dstArrayElement = 0;
+    descriptorWrites.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrites.back().descriptorCount = 1;
+    descriptorWrites.back().pBufferInfo = &bufferInfo;
 
-    // Combine base + extra descriptor writes
-    // descriptorWrites.insert(descriptorWrites.end(), extraDescriptorWrites.begin(), extraDescriptorWrites.end());
+    // Append extra per child-material descriptor writes
+    AppendExtraDescriptorWrites(descriptorWrites);
 
     vkUpdateDescriptorSets(Renderer::GetDevice(), (uint32_t)descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }

@@ -11,9 +11,9 @@ public:
 
 private:
     void RenderMaterial(VkCommandBuffer _commandBuffer, VkPipelineLayout _pipelineLayout) const override;
-    std::vector<VkDescriptorSetLayoutBinding> GetSetLayoutBindings() override;
-    std::vector<VkDescriptorPoolSize> GetExtraPoolSizes() override;
-    void CreateDescriptorSets() override;
+    void AppendSetLayoutBindings(std::vector<VkDescriptorSetLayoutBinding>& _bindings) override;
+    void AppendExtraPoolSizes(std::vector<VkDescriptorPoolSize>& _poolSizes) override;
+    void AppendExtraDescriptorWrites(std::vector<VkWriteDescriptorSet>& _descriptorWrites) override;
     void SetupPushConstantRanges() override;
 
 public:

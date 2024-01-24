@@ -23,12 +23,12 @@ private:
     void CreateUniformBuffer();
     void CreateDescriptorPool();
     void CreateDescriptorSetLayout();
-    virtual void CreateDescriptorSets();
+    void CreateDescriptorSets();
 
 protected:
-    virtual std::vector<VkDescriptorSetLayoutBinding> GetSetLayoutBindings() { return{}; }
-    virtual std::vector<VkDescriptorPoolSize> GetExtraPoolSizes() { return{}; }
-    virtual void GetExtraDescriptorWrites(std::vector<VkWriteDescriptorSet>& _descriptorWrites) {}
+    virtual void AppendSetLayoutBindings(std::vector<VkDescriptorSetLayoutBinding>& _bindings) {}
+    virtual void AppendExtraPoolSizes(std::vector<VkDescriptorPoolSize>& _poolSizes) {}
+    virtual void AppendExtraDescriptorWrites(std::vector<VkWriteDescriptorSet>& _descriptorWrites) {}
     virtual void SetupPushConstantRanges() {}
 
 public:
