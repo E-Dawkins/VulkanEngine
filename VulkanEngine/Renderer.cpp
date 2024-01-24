@@ -1071,12 +1071,16 @@ void Renderer::CleanupSwapChain() const
 
 void Renderer::UpdateUniformBuffer(const uint32_t _currentImage) const
 {
-    static auto startTime = std::chrono::high_resolution_clock::now();
+    static auto lastTime = std::chrono::high_resolution_clock::now();
 
     const auto currentTime = std::chrono::high_resolution_clock::now();
-    const float deltaTime = std::chrono::duration<float>(currentTime - startTime).count();
+    const float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
+
+    // std::cout << "FPS: " << static_cast<int>(1.f / deltaTime) << std::endl;
 
     m_mesh->UpdateMesh(deltaTime);
+
+    lastTime = currentTime;
 }
 
 VkCommandBuffer Renderer::BeginSingleTimeCommands()

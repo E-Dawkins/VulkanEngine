@@ -36,12 +36,14 @@ void Mesh::DrawMesh(const VkCommandBuffer _commandBuffer, VkPipelineLayout _pipe
     vkCmdDrawIndexed(_commandBuffer, static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
 }
 
-void Mesh::UpdateMesh(const float _deltaTime) const
+void Mesh::UpdateMesh(const float _deltaTime)
 {
     // Update models' matrix
-    material->ubo.model = rotate(transform.GetMatrix(), _deltaTime * glm::radians(30.f), glm::vec3(0.f, 0.f, 1.f));
-    material->ubo.model = translate(material->ubo.model, glm::vec3(0, 0, sinf(_deltaTime)));
+    transform.rotation = rotate(transform.rotation, _deltaTime * glm::radians(30.f), glm::vec3(0, 0, 1));
+    static float accumulatedTime = 0.f;
+    transform.position.z = 0.25f * sinf(accumulatedTime += _deltaTime);
     
+    material->ubo.model = transform.GetMatrix();
     material->UpdateMaterial();
 }
 

@@ -10,7 +10,7 @@ public:
     ~Mesh();
 
     void DrawMesh(VkCommandBuffer _commandBuffer, VkPipelineLayout _pipelineLayout) const;
-    void UpdateMesh(float _deltaTime) const;
+    void UpdateMesh(float _deltaTime);
 
 private:
     void LoadModel();
