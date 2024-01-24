@@ -17,15 +17,12 @@
 #include "Material_Unlit.h"
 #include "Mesh.h"
 
-
-Renderer::Renderer(const int _width, const int _height, const int _maxFramesInFlight) :
-    m_width(_width), m_height(_height), m_maxFramesInFlight(_maxFramesInFlight)
+void Renderer::Initialize(const int _width, const int _height, const int _maxFramesInFlight)
 {
+    m_width = _width;
+    m_height = _height;
+    m_maxFramesInFlight = _maxFramesInFlight;
     
-}
-
-void Renderer::Initialize()
-{
     InitWindow();
     InitVulkan();
     MainLoop();
@@ -1040,7 +1037,7 @@ VkFormat Renderer::FindDepthFormat()
     );
 }
 
-bool Renderer::IsDeviceSuitable(VkPhysicalDevice _device) const
+bool Renderer::IsDeviceSuitable(VkPhysicalDevice _device)
 {
     QueueFamilyIndices indices = FindQueueFamilies(_device);
 
@@ -1261,7 +1258,5 @@ VkBool32 Renderer::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT _message
 
     return VK_FALSE;
 }
-
-
 
 #pragma endregion

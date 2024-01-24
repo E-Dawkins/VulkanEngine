@@ -14,14 +14,14 @@ Material_Base::Material_Base(std::string _vertexShaderPath, std::string _fragmen
 
 Material_Base::~Material_Base()
 {
-    vkDestroyBuffer(Renderer::GetDevice(), m_uniformBuffer, nullptr);
-    vkFreeMemory(Renderer::GetDevice(), m_uniformBufferMemory, nullptr);
+    vkDestroyBuffer(Renderer::GetInstance()->GetDevice(), m_uniformBuffer, nullptr);
+    vkFreeMemory(Renderer::GetInstance()->GetDevice(), m_uniformBufferMemory, nullptr);
 
-    vkDestroyDescriptorPool(Renderer::GetDevice(), m_descriptorPool, nullptr);
-    vkDestroyDescriptorSetLayout(Renderer::GetDevice(), m_descriptorSetLayout, nullptr);
+    vkDestroyDescriptorPool(Renderer::GetInstance()->GetDevice(), m_descriptorPool, nullptr);
+    vkDestroyDescriptorSetLayout(Renderer::GetInstance()->GetDevice(), m_descriptorSetLayout, nullptr);
 
-    vkDestroyPipeline(Renderer::GetDevice(), m_graphicsPipeline, nullptr);
-    vkDestroyPipelineLayout(Renderer::GetDevice(), m_pipelineLayout, nullptr);
+    vkDestroyPipeline(Renderer::GetInstance()->GetDevice(), m_graphicsPipeline, nullptr);
+    vkDestroyPipelineLayout(Renderer::GetInstance()->GetDevice(), m_pipelineLayout, nullptr);
 }
 
 void Material_Base::Init()
@@ -47,7 +47,7 @@ void Material_Base::UpdateMaterial()
 {
     // Update 'camera' view / projection matrices
     ubo.view = lookAt(glm::vec3(2), glm::vec3(0), glm::vec3(0.f, 0.f, 1.f));
-    ubo.proj = glm::perspective(glm::radians(45.f), Renderer::GetSwapchainRatio(), 0.1f, 10.f);
+    ubo.proj = glm::perspective(glm::radians(45.f), Renderer::GetInstance()->GetSwapchainRatio(), 0.1f, 10.f);
     ubo.proj[1][1] *= -1;
 
     memcpy(m_uniformBufferMapped, &ubo, sizeof(ubo));
@@ -90,7 +90,7 @@ VkShaderModule Material_Base::CreateShaderModule(const std::vector<char>& _code)
     createInfo.pCode = reinterpret_cast<const uint32_t*>(_code.data());
 
     VkShaderModule shaderModule;
-    if (vkCreateShaderModule(Renderer::GetDevice(), &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+    if (vkCreateShaderModule(Renderer::GetInstance()->GetDevice(), &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create shader module!");
     }
@@ -102,11 +102,11 @@ void Material_Base::CreateUniformBuffer()
 {
     constexpr VkDeviceSize bufferSize = sizeof(UniformBufferObject);
         
-    Renderer::CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+    Renderer::GetInstance()->CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                  m_uniformBuffer, m_uniformBufferMemory);
 
-    vkMapMemory(Renderer::GetDevice(), m_uniformBufferMemory, 0, bufferSize, 0, &m_uniformBufferMapped);
+    vkMapMemory(Renderer::GetInstance()->GetDevice(), m_uniformBufferMemory, 0, bufferSize, 0, &m_uniformBufferMapped);
 }
 
 void Material_Base::CreateDescriptorPool()
@@ -127,7 +127,7 @@ void Material_Base::CreateDescriptorPool()
     poolInfo.pPoolSizes = poolSizes.data();
     poolInfo.maxSets = 1;
 
-    if (vkCreateDescriptorPool(Renderer::GetDevice(), &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS)
+    if (vkCreateDescriptorPool(Renderer::GetInstance()->GetDevice(), &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create descriptor pool!");
     }
@@ -153,7 +153,7 @@ void Material_Base::CreateDescriptorSetLayout()
     layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
     layoutInfo.pBindings = bindings.data();
 
-    if (vkCreateDescriptorSetLayout(Renderer::GetDevice(), &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS)
+    if (vkCreateDescriptorSetLayout(Renderer::GetInstance()->GetDevice(), &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
@@ -198,14 +198,14 @@ void Material_Base::CreateGraphicsPipeline()
     VkViewport viewport{};
     viewport.x = 0.f;
     viewport.y = 0.f;
-    viewport.width = static_cast<float>(Renderer::GetSwapchainExtent().width);
-    viewport.height = static_cast<float>(Renderer::GetSwapchainExtent().height);
+    viewport.width = static_cast<float>(Renderer::GetInstance()->GetSwapchainExtent().width);
+    viewport.height = static_cast<float>(Renderer::GetInstance()->GetSwapchainExtent().height);
     viewport.minDepth = 0.f;
     viewport.maxDepth = 1.f;
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = Renderer::GetSwapchainExtent();
+    scissor.extent = Renderer::GetInstance()->GetSwapchainExtent();
 
     std::vector dynamicStates =
     {
@@ -240,7 +240,7 @@ void Material_Base::CreateGraphicsPipeline()
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisampling.sampleShadingEnable = VK_TRUE; // enable sample shading in the pipeline
     multisampling.minSampleShading = .2f; // min fraction for sample shading, closer to one is smoother
-    multisampling.rasterizationSamples = Renderer::GetMsaaSampleCount();
+    multisampling.rasterizationSamples = Renderer::GetInstance()->GetMsaaSampleCount();
     multisampling.pSampleMask = nullptr; // optional
     multisampling.alphaToCoverageEnable = VK_FALSE; // optional
     multisampling.alphaToOneEnable = VK_FALSE; // optional
@@ -286,7 +286,7 @@ void Material_Base::CreateGraphicsPipeline()
     pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(m_pushConstantRanges.size());
     pipelineLayoutInfo.pPushConstantRanges = m_pushConstantRanges.data();
 
-    if (vkCreatePipelineLayout(Renderer::GetDevice(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS)
+    if (vkCreatePipelineLayout(Renderer::GetInstance()->GetDevice(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create pipeline layout!");
     }
@@ -309,13 +309,13 @@ void Material_Base::CreateGraphicsPipeline()
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // optional
     pipelineInfo.basePipelineIndex = -1; // optional
 
-    if (vkCreateGraphicsPipelines(Renderer::GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline) != VK_SUCCESS)
+    if (vkCreateGraphicsPipelines(Renderer::GetInstance()->GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
     
-    vkDestroyShaderModule(Renderer::GetDevice(), m_fragShaderModule, nullptr);
-    vkDestroyShaderModule(Renderer::GetDevice(), m_vertShaderModule, nullptr);
+    vkDestroyShaderModule(Renderer::GetInstance()->GetDevice(), m_fragShaderModule, nullptr);
+    vkDestroyShaderModule(Renderer::GetInstance()->GetDevice(), m_vertShaderModule, nullptr);
 }
 
 void Material_Base::CreateDescriptorSets()
@@ -326,7 +326,7 @@ void Material_Base::CreateDescriptorSets()
     allocInfo.descriptorSetCount = 1;
     allocInfo.pSetLayouts = &m_descriptorSetLayout;
     
-    if (vkAllocateDescriptorSets(Renderer::GetDevice(), &allocInfo, &m_descriptorSet) != VK_SUCCESS)
+    if (vkAllocateDescriptorSets(Renderer::GetInstance()->GetDevice(), &allocInfo, &m_descriptorSet) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to allocate descriptor sets!");
     }
@@ -351,5 +351,5 @@ void Material_Base::CreateDescriptorSets()
     // Append extra per child-material descriptor writes
     AppendExtraDescriptorWrites(descriptorWrites);
 
-    vkUpdateDescriptorSets(Renderer::GetDevice(), (uint32_t)descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+    vkUpdateDescriptorSets(Renderer::GetInstance()->GetDevice(), (uint32_t)descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }

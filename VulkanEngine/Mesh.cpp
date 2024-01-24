@@ -27,11 +27,11 @@ Mesh::Mesh(std::string _meshPath, const bool _logLoadTime) : m_meshPath(std::mov
 
 Mesh::~Mesh()
 {
-    vkDestroyBuffer(Renderer::GetDevice(), m_indexBuffer, nullptr);
-    vkFreeMemory(Renderer::GetDevice(), m_indexBufferMemory, nullptr);
+    vkDestroyBuffer(Renderer::GetInstance()->GetDevice(), m_indexBuffer, nullptr);
+    vkFreeMemory(Renderer::GetInstance()->GetDevice(), m_indexBufferMemory, nullptr);
 
-    vkDestroyBuffer(Renderer::GetDevice(), m_vertexBuffer, nullptr);
-    vkFreeMemory(Renderer::GetDevice(), m_vertexBufferMemory, nullptr);
+    vkDestroyBuffer(Renderer::GetInstance()->GetDevice(), m_vertexBuffer, nullptr);
+    vkFreeMemory(Renderer::GetInstance()->GetDevice(), m_vertexBufferMemory, nullptr);
 }
 
 void Mesh::DrawMesh(const VkCommandBuffer _commandBuffer) const
@@ -107,22 +107,22 @@ void Mesh::CreateVertexBuffer()
 
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
-    Renderer::CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    Renderer::GetInstance()->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         stagingBuffer, stagingBufferMemory);
 
     void* data;
-    vkMapMemory(Renderer::GetDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
+    vkMapMemory(Renderer::GetInstance()->GetDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
     memcpy(data, m_vertices.data(), (size_t)bufferSize);
-    vkUnmapMemory(Renderer::GetDevice(), stagingBufferMemory);
+    vkUnmapMemory(Renderer::GetInstance()->GetDevice(), stagingBufferMemory);
 
-    Renderer::CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    Renderer::GetInstance()->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_vertexBuffer, m_vertexBufferMemory);
 
-    Renderer::CopyBuffer(stagingBuffer, m_vertexBuffer, bufferSize);
+    Renderer::GetInstance()->CopyBuffer(stagingBuffer, m_vertexBuffer, bufferSize);
 
-    vkDestroyBuffer(Renderer::GetDevice(), stagingBuffer, nullptr);
-    vkFreeMemory(Renderer::GetDevice(), stagingBufferMemory, nullptr);
+    vkDestroyBuffer(Renderer::GetInstance()->GetDevice(), stagingBuffer, nullptr);
+    vkFreeMemory(Renderer::GetInstance()->GetDevice(), stagingBufferMemory, nullptr);
 }
 
 void Mesh::CreateIndexBuffer()
@@ -131,20 +131,20 @@ void Mesh::CreateIndexBuffer()
 
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
-    Renderer::CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    Renderer::GetInstance()->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         stagingBuffer, stagingBufferMemory);
 
     void* data;
-    vkMapMemory(Renderer::GetDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
+    vkMapMemory(Renderer::GetInstance()->GetDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
     memcpy(data, m_indices.data(), (size_t)bufferSize);
-    vkUnmapMemory(Renderer::GetDevice(), stagingBufferMemory);
+    vkUnmapMemory(Renderer::GetInstance()->GetDevice(), stagingBufferMemory);
 
-    Renderer::CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+    Renderer::GetInstance()->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_indexBuffer, m_indexBufferMemory);
 
-    Renderer::CopyBuffer(stagingBuffer, m_indexBuffer, bufferSize);
+    Renderer::GetInstance()->CopyBuffer(stagingBuffer, m_indexBuffer, bufferSize);
 
-    vkDestroyBuffer(Renderer::GetDevice(), stagingBuffer, nullptr);
-    vkFreeMemory(Renderer::GetDevice(), stagingBufferMemory, nullptr);
+    vkDestroyBuffer(Renderer::GetInstance()->GetDevice(), stagingBuffer, nullptr);
+    vkFreeMemory(Renderer::GetInstance()->GetDevice(), stagingBufferMemory, nullptr);
 }

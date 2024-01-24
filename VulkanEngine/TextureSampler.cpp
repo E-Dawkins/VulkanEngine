@@ -21,7 +21,7 @@ TextureSampler::TextureSampler(const Texture* _texture)
     samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 
     VkPhysicalDeviceProperties properties{};
-    vkGetPhysicalDeviceProperties(Renderer::GetPhysicalDevice(), &properties);
+    vkGetPhysicalDeviceProperties(Renderer::GetInstance()->GetPhysicalDevice(), &properties);
 
     samplerInfo.anisotropyEnable = VK_TRUE;
     samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
@@ -34,7 +34,7 @@ TextureSampler::TextureSampler(const Texture* _texture)
     samplerInfo.maxLod = static_cast<float>(_texture->GetMipLevels());
     samplerInfo.mipLodBias = 0.f; // optional
 
-    if (vkCreateSampler(Renderer::GetDevice(), &samplerInfo, nullptr, &m_sampler) != VK_SUCCESS)
+    if (vkCreateSampler(Renderer::GetInstance()->GetDevice(), &samplerInfo, nullptr, &m_sampler) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create texture sampler!");
     }
@@ -42,5 +42,5 @@ TextureSampler::TextureSampler(const Texture* _texture)
 
 TextureSampler::~TextureSampler()
 {
-    vkDestroySampler(Renderer::GetDevice(), m_sampler, nullptr);
+    vkDestroySampler(Renderer::GetInstance()->GetDevice(), m_sampler, nullptr);
 }

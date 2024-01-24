@@ -15,9 +15,9 @@ Texture::Texture(std::string _texturePath)
 
 Texture::~Texture()
 {
-    vkDestroyImageView(Renderer::GetDevice(), m_textureImageView, nullptr);
-    vkDestroyImage(Renderer::GetDevice(), m_textureImage, nullptr);
-    vkFreeMemory(Renderer::GetDevice(), m_textureImageMemory, nullptr);
+    vkDestroyImageView(Renderer::GetInstance()->GetDevice(), m_textureImageView, nullptr);
+    vkDestroyImage(Renderer::GetInstance()->GetDevice(), m_textureImage, nullptr);
+    vkFreeMemory(Renderer::GetInstance()->GetDevice(), m_textureImageMemory, nullptr);
 }
 
 void Texture::CreateTextureImage()
@@ -36,27 +36,27 @@ void Texture::CreateTextureImage()
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
 
-    Renderer::CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    Renderer::GetInstance()->CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         stagingBuffer, stagingBufferMemory);
 
     void* data;
-    vkMapMemory(Renderer::GetDevice(), stagingBufferMemory, 0, imageSize, 0, &data);
+    vkMapMemory(Renderer::GetInstance()->GetDevice(), stagingBufferMemory, 0, imageSize, 0, &data);
     memcpy(data, pixels, static_cast<size_t>(imageSize));
-    vkUnmapMemory(Renderer::GetDevice(), stagingBufferMemory);
+    vkUnmapMemory(Renderer::GetInstance()->GetDevice(), stagingBufferMemory);
 
     stbi_image_free(pixels);
 
-    Renderer::CreateImage(texWidth, texHeight, m_mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
+    Renderer::GetInstance()->CreateImage(texWidth, texHeight, m_mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_textureImage, m_textureImageMemory);
 
-    Renderer::TransitionImageLayout(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_mipLevels);
-    Renderer::CopyBufferToImage(stagingBuffer, m_textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+    Renderer::GetInstance()->TransitionImageLayout(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_mipLevels);
+    Renderer::GetInstance()->CopyBufferToImage(stagingBuffer, m_textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
     // transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
     
-    vkDestroyBuffer(Renderer::GetDevice(), stagingBuffer, nullptr);
-    vkFreeMemory(Renderer::GetDevice(), stagingBufferMemory, nullptr);
+    vkDestroyBuffer(Renderer::GetInstance()->GetDevice(), stagingBuffer, nullptr);
+    vkFreeMemory(Renderer::GetInstance()->GetDevice(), stagingBufferMemory, nullptr);
 
     GenerateMipmaps(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, m_mipLevels);
 }
@@ -66,14 +66,14 @@ void Texture::GenerateMipmaps(const VkImage _image, const VkFormat _imageFormat,
 {
     // Check if image format supports linear blit-ing
     VkFormatProperties formatProperties{};
-    vkGetPhysicalDeviceFormatProperties(Renderer::GetPhysicalDevice(), _imageFormat, &formatProperties);
+    vkGetPhysicalDeviceFormatProperties(Renderer::GetInstance()->GetPhysicalDevice(), _imageFormat, &formatProperties);
 
     if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
     {
         throw std::runtime_error("texture image format does not support linear blit-ing!");
     }
 
-    const VkCommandBuffer commandBuffer = Renderer::BeginSingleTimeCommands();
+    const VkCommandBuffer commandBuffer = Renderer::GetInstance()->BeginSingleTimeCommands();
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -161,10 +161,10 @@ void Texture::GenerateMipmaps(const VkImage _image, const VkFormat _imageFormat,
         1, &barrier
     );
 
-    Renderer::EndSingleTimeCommands(commandBuffer);
+    Renderer::GetInstance()->EndSingleTimeCommands(commandBuffer);
 }
 
 void Texture::CreateTextureImageView()
 {
-    m_textureImageView = Renderer::CreateImageView(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, m_mipLevels);
+    m_textureImageView = Renderer::GetInstance()->CreateImageView(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, m_mipLevels);
 }

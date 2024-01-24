@@ -62,25 +62,34 @@ struct SwapChainSupportDetails
 class Renderer
 {
 public:
-    Renderer(int _width, int _height, int _maxFramesInFlight = 2);
-    void Initialize();
+    void Initialize(int _width, int _height, int _maxFramesInFlight = 2);
 
-    static VkDevice GetDevice() { return m_device; }
-    static VkPhysicalDevice GetPhysicalDevice() { return m_physicalDevice; }
-    static float GetSwapchainRatio() { return static_cast<float>(m_swapChainExtent.width) / static_cast<float>(m_swapChainExtent.height); }
-    static VkExtent2D GetSwapchainExtent() { return m_swapChainExtent; }
-    static VkSampleCountFlagBits GetMsaaSampleCount() { return m_msaaSamples; }
+    static Renderer* GetInstance()
+    {
+        if (m_rendererInstance == nullptr)
+        {
+            m_rendererInstance = new Renderer();
+        }
+            
+        return m_rendererInstance;
+    }
+    
+    VkDevice GetDevice() { return m_device; }
+    VkPhysicalDevice GetPhysicalDevice() { return m_physicalDevice; }
+    float GetSwapchainRatio() { return static_cast<float>(m_swapChainExtent.width) / static_cast<float>(m_swapChainExtent.height); }
+    VkExtent2D GetSwapchainExtent() { return m_swapChainExtent; }
+    VkSampleCountFlagBits GetMsaaSampleCount() { return m_msaaSamples; }
 
-    static void CreateBuffer(VkDeviceSize _size, VkBufferUsageFlags _usage, VkMemoryPropertyFlags _properties, VkBuffer& _buffer, VkDeviceMemory& _bufferMemory);
-    static uint32_t FindMemoryType(uint32_t _typeFilter, VkMemoryPropertyFlags _properties);
-    static void CreateImage(uint32_t _width, uint32_t _height, uint32_t _mipLevels, VkSampleCountFlagBits _numSamples, VkFormat _format,
-                     VkImageTiling _tiling, VkImageUsageFlags _usage, VkMemoryPropertyFlags _properties, VkImage& _image, VkDeviceMemory& _imageMemory);
-    static void TransitionImageLayout(VkImage _image, VkFormat _format, VkImageLayout _oldLayout, VkImageLayout _newLayout, uint32_t _mipLevels);
-    static VkCommandBuffer BeginSingleTimeCommands();
-    static void EndSingleTimeCommands(VkCommandBuffer _commandBuffer);
-    static VkImageView CreateImageView(VkImage _image, VkFormat _format, VkImageAspectFlags _aspectFlags, uint32_t _mipLevels);
-    static void CopyBufferToImage(VkBuffer _buffer, VkImage _image, uint32_t _width, uint32_t _height);
-    static void CopyBuffer(VkBuffer _srcBuffer, VkBuffer _dstBuffer, VkDeviceSize _size);
+    void CreateBuffer(VkDeviceSize _size, VkBufferUsageFlags _usage, VkMemoryPropertyFlags _properties, VkBuffer& _buffer, VkDeviceMemory& _bufferMemory);
+    uint32_t FindMemoryType(uint32_t _typeFilter, VkMemoryPropertyFlags _properties);
+    void CreateImage(uint32_t _width, uint32_t _height, uint32_t _mipLevels, VkSampleCountFlagBits _numSamples, VkFormat _format,
+              VkImageTiling _tiling, VkImageUsageFlags _usage, VkMemoryPropertyFlags _properties, VkImage& _image, VkDeviceMemory& _imageMemory);
+    void TransitionImageLayout(VkImage _image, VkFormat _format, VkImageLayout _oldLayout, VkImageLayout _newLayout, uint32_t _mipLevels);
+    VkCommandBuffer BeginSingleTimeCommands();
+    void EndSingleTimeCommands(VkCommandBuffer _commandBuffer);
+    VkImageView CreateImageView(VkImage _image, VkFormat _format, VkImageAspectFlags _aspectFlags, uint32_t _mipLevels);
+    void CopyBufferToImage(VkBuffer _buffer, VkImage _image, uint32_t _width, uint32_t _height);
+    void CopyBuffer(VkBuffer _srcBuffer, VkBuffer _dstBuffer, VkDeviceSize _size);
 
 private:
     void InitWindow();
@@ -95,6 +104,7 @@ private:
 
     void CreateInstance();
     void SetupDebugMessenger();
+    void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& _createInfo);
     void CreateSurface();
     void PickPhysicalDevice();
     void CreateLogicalDevices();
@@ -112,26 +122,28 @@ private:
     void RecordCommandBuffer(VkCommandBuffer _commandBuffer, uint32_t _imageIndex) const;
     void CleanupSwapChain() const;
     void UpdateUniformBuffer(uint32_t _currentImage) const;
+    
     VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& _capabilities) const;
-    static VkFormat FindSupportedFormat(const std::vector<VkFormat>& _candidates, VkImageTiling _tiling, VkFormatFeatureFlags _features);
-    static VkFormat FindDepthFormat();
-    bool IsDeviceSuitable(VkPhysicalDevice _device) const;
-    static VkSampleCountFlagBits GetMaxUsableSampleCount();
+    VkFormat FindSupportedFormat(const std::vector<VkFormat>& _candidates, VkImageTiling _tiling, VkFormatFeatureFlags _features);
+    VkFormat FindDepthFormat();
+    bool IsDeviceSuitable(VkPhysicalDevice _device);
+    VkSampleCountFlagBits GetMaxUsableSampleCount();
     SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice _device) const;
     QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice _device) const;
-
-    static bool HasStencilComponent(VkFormat _format);
-    static VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& _availablePresentModes);
-    static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& _availableFormats);
-    static bool CheckDeviceExtensionSupport(VkPhysicalDevice _device);
-    static void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& _createInfo);
-    static std::vector<const char*> GetRequiredExtensions();
-    static bool CheckValidationLayerSupport();
+    bool HasStencilComponent(VkFormat _format);
+    VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& _availablePresentModes);
+    VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& _availableFormats);
+    bool CheckDeviceExtensionSupport(VkPhysicalDevice _device);
+    std::vector<const char*> GetRequiredExtensions();
+    bool CheckValidationLayerSupport();
+    
     static void FrameBufferResizeCallback(GLFWwindow* _window, int _width, int _height);
     static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT _messageSeverity, VkDebugUtilsMessageTypeFlagsEXT _messageType,
                                                         const VkDebugUtilsMessengerCallbackDataEXT* _pCallbackData, void* _pUserData);
     
 private:
+    inline static Renderer* m_rendererInstance = nullptr;
+    
     int m_width = 800;
     int m_height = 600;
     int m_maxFramesInFlight = 2;

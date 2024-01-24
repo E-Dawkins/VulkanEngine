@@ -3,11 +3,9 @@
 
 int main() 
 {
-    Renderer renderer(800, 600);
-
     try
     {
-        renderer.Initialize();
+        Renderer::GetInstance()->Initialize(800, 600);
     }
     catch (const std::exception& e)
     {
