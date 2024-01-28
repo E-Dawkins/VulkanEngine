@@ -25,3 +25,6 @@
 using namespace std::chrono;
 
 #include "Renderer.h"
+
+inline long double g_timeSinceAppStart = 0.f;
+inline glm::vec3 g_gravity = glm::vec3(0, 0, -0.0098f);

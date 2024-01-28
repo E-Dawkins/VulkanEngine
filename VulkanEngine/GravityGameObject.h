@@ -4,13 +4,13 @@
 class SphereColliderComponent;
 class MeshComponent;
 
-class TestGameObject : public GameObject
+class GravityGameObject : public GameObject
 {
 public:
     void BeginPlay() override;
     void Tick(float _deltaSeconds) override;
 
 private:
-    MeshComponent* m_meshComponent = nullptr;
+    MeshComponent* m_meshComp = nullptr;
     SphereColliderComponent* m_sphereColl = nullptr;
 };

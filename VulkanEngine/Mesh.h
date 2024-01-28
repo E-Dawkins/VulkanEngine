@@ -6,9 +6,10 @@ class Material_Base;
 class Mesh
 {
 public:
-    Mesh(std::string _meshPath, bool _logLoadTime = false);
+    Mesh();
     ~Mesh();
 
+    void InitMesh(const std::string& _meshPath, bool _logInitTime = false);
     void DrawMesh(VkCommandBuffer _commandBuffer) const;
     void UpdateMesh(float _deltaTime);
 

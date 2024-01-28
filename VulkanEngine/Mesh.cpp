@@ -8,25 +8,7 @@
 
 #include "Material_Base.h"
 
-Mesh::Mesh(std::string _meshPath, const bool _logLoadTime) : m_meshPath(std::move(_meshPath))
-{
-    const auto startTime = high_resolution_clock::now();
-    
-    LoadModel();
-    CreateVertexBuffer();
-    CreateIndexBuffer();
-
-    const auto endTime = high_resolution_clock::now();
-
-    if (_logLoadTime)
-    {
-        const float totalTime = static_cast<int16_t>(duration<float, milliseconds::period>(endTime - startTime).count());
-        std::cout << "Mesh at \"" << m_meshPath << "\" loaded in " << totalTime << "ms" << std::endl;
-    }
-
-    // Add draw call to renderer pass
-    Renderer::GetInstance()->AddDrawCall([this](const VkCommandBuffer _commandBuffer) {DrawMesh(_commandBuffer);});
-}
+Mesh::Mesh() = default;
 
 Mesh::~Mesh()
 {
@@ -35,6 +17,27 @@ Mesh::~Mesh()
 
     vkDestroyBuffer(Renderer::GetInstance()->GetDevice(), m_vertexBuffer, nullptr);
     vkFreeMemory(Renderer::GetInstance()->GetDevice(), m_vertexBufferMemory, nullptr);
+}
+
+void Mesh::InitMesh(const std::string& _meshPath, const bool _logInitTime)
+{
+    const auto startTime = high_resolution_clock::now();
+    m_meshPath = _meshPath;
+    
+    LoadModel();
+    CreateVertexBuffer();
+    CreateIndexBuffer();
+
+    const auto endTime = high_resolution_clock::now();
+
+    if (_logInitTime)
+    {
+        const float totalTime = static_cast<int16_t>(duration<float, milliseconds::period>(endTime - startTime).count());
+        std::cout << "Mesh at \"" << m_meshPath << "\" loaded in " << totalTime << "ms" << std::endl;
+    }
+
+    // Add draw call to renderer pass
+    Renderer::GetInstance()->AddDrawCall([this](const VkCommandBuffer _commandBuffer) {DrawMesh(_commandBuffer);});
 }
 
 void Mesh::DrawMesh(const VkCommandBuffer _commandBuffer) const

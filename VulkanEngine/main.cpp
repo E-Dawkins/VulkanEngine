@@ -1,6 +1,8 @@
 #include "pch.h"
 
+#include "GravityGameObject.h"
 #include "Renderer.h"
+#include "PhysicsSolver.h"
 #include "TestGameObject.h"
 
 int main() 
@@ -8,7 +10,10 @@ int main()
     Renderer::GetInstance()->Initialize(800, 600);
     
     auto* testObject = new TestGameObject();
+    auto* gravityObject = new GravityGameObject();
+    
     testObject->BeginPlay();
+    gravityObject->BeginPlay();
     
     auto mainThreadFunc = [&]()
     {
@@ -27,11 +32,19 @@ int main()
                 {
                     continue;
                 }
+
+                g_timeSinceAppStart += deltaTime;
                 
+                // Game object ticks happen first
+                testObject->Tick(deltaTime);
+                gravityObject->Tick(deltaTime);
+
+                // Then we update physics
+                PhysicsSolver::GetInstance()->CheckForCollisions();
+
+                // Drawing will happen at the end of the frame
                 glfwPollEvents();
                 Renderer::GetInstance()->DrawFrame();
-                
-                testObject->Tick(deltaTime);
 
                 lastTime = currentTime;
             }
@@ -42,8 +55,7 @@ int main()
         }
 
         vkDeviceWaitIdle(Renderer::GetInstance()->GetDevice());
-
-        testObject->EndPlay();
+        
         Renderer::GetInstance()->Cleanup();
     };
 

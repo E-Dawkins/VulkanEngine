@@ -171,6 +171,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ColliderComponent.cpp" />
+    <ClCompile Include="GravityGameObject.cpp" />
     <ClCompile Include="Material_Base.cpp" />
     <ClCompile Include="main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
@@ -193,6 +195,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="PhysicsSolver.cpp" />
     <ClCompile Include="Renderer.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
@@ -200,21 +203,26 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SceneComponent.cpp" />
+    <ClCompile Include="SphereColliderComponent.cpp" />
     <ClCompile Include="TestGameObject.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TextureSampler.cpp" />
     <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ColliderComponent.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="GravityGameObject.h" />
     <ClInclude Include="Material_Base.h" />
     <ClInclude Include="Material_Unlit.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshComponent.h" />
     <ClInclude Include="ObjectComponent.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="PhysicsSolver.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="SceneComponent.h" />
+    <ClInclude Include="SphereColliderComponent.h" />
     <ClInclude Include="TestGameObject.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureSampler.h" />
