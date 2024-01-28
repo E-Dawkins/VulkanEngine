@@ -79,6 +79,7 @@ public:
     float GetSwapchainRatio() { return static_cast<float>(m_swapChainExtent.width) / static_cast<float>(m_swapChainExtent.height); }
     VkExtent2D GetSwapchainExtent() { return m_swapChainExtent; }
     VkSampleCountFlagBits GetMsaaSampleCount() { return m_msaaSamples; }
+    VkRenderPass GetRenderPass() { return m_renderPass; }
 
     void CreateBuffer(VkDeviceSize _size, VkBufferUsageFlags _usage, VkMemoryPropertyFlags _properties, VkBuffer& _buffer, VkDeviceMemory& _bufferMemory);
     uint32_t FindMemoryType(uint32_t _typeFilter, VkMemoryPropertyFlags _properties);
@@ -91,16 +92,17 @@ public:
     void CopyBufferToImage(VkBuffer _buffer, VkImage _image, uint32_t _width, uint32_t _height);
     void CopyBuffer(VkBuffer _srcBuffer, VkBuffer _dstBuffer, VkDeviceSize _size);
 
+public:
+    void DrawFrame();
+    void Cleanup() const;
+
+    bool IsRunning() const { return !glfwWindowShouldClose(m_window); }
+
+    void AddDrawCall(const std::function<void(VkCommandBuffer)>& _drawCall) {m_drawCalls.push_back(_drawCall); }
+    
 private:
     void InitWindow();
     void InitVulkan();
-    void MainLoop();
-    void Cleanup() const;
-    
-    void InitMaterials();
-    void InitMeshes();
-    
-    void CleanupResources() const;
 
     void CreateInstance();
     void SetupDebugMessenger();
@@ -118,7 +120,6 @@ private:
     void CreateFrameBuffers();
     void CreateCommandBuffers();
     void CreateSyncObjects();
-    void DrawFrame();
     void RecordCommandBuffer(VkCommandBuffer _commandBuffer, uint32_t _imageIndex) const;
     void CleanupSwapChain() const;
     void UpdateUniformBuffer(uint32_t _currentImage) const;
@@ -182,7 +183,6 @@ private:
     VkImageView m_colorImageView{};
     
     uint32_t m_currentFrame = 0;
-    
-    Mesh* m_mesh = nullptr;
-    Material_Base* m_material = nullptr;
+
+    std::vector<std::function<void(VkCommandBuffer)>> m_drawCalls{};
 };

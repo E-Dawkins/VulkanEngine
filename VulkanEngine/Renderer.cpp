@@ -13,10 +13,6 @@
 #include <optional>
 #include <set>
 
-#include "Material_Base.h"
-#include "Material_Unlit.h"
-#include "Mesh.h"
-
 void Renderer::Initialize(const int _width, const int _height, const int _maxFramesInFlight)
 {
     m_width = _width;
@@ -25,8 +21,6 @@ void Renderer::Initialize(const int _width, const int _height, const int _maxFra
     
     InitWindow();
     InitVulkan();
-    MainLoop();
-    Cleanup();
 }
 
 void Renderer::InitWindow()
@@ -58,48 +52,11 @@ void Renderer::InitVulkan()
     CreateFrameBuffers();
     CreateCommandBuffers();
     CreateSyncObjects();
-    
-    InitMaterials();
-    InitMeshes();
-}
-
-void Renderer::InitMaterials()
-{
-    auto* unlitMaterial = new Material_Unlit("shaders/unlit.vert.spv", "shaders/unlit.frag.spv", m_renderPass);
-    unlitMaterial->SetTexture(new Texture("textures/viking_room.png"));
-    
-    m_material = unlitMaterial;
-    m_material->Init();
-}
-
-void Renderer::InitMeshes()
-{
-    m_mesh = new Mesh("models/viking_room.obj", true);
-    m_mesh->transform.scale = glm::vec3(.5f);
-    m_mesh->material = m_material;
-}
-
-void Renderer::CleanupResources() const
-{
-    delete m_material;
-    delete m_mesh;
-}
-
-void Renderer::MainLoop()
-{
-    while (!glfwWindowShouldClose(m_window))
-    {
-        glfwPollEvents();
-        DrawFrame();
-    }
-
-    vkDeviceWaitIdle(m_device);
 }
 
 void Renderer::Cleanup() const
 {
     CleanupSwapChain();
-    CleanupResources();
         
     vkDestroyRenderPass(m_device, m_renderPass, nullptr);
         
@@ -862,8 +819,13 @@ void Renderer::RecordCommandBuffer(const VkCommandBuffer _commandBuffer, uint32_
     scissor.extent = m_swapChainExtent;
     vkCmdSetScissor(_commandBuffer, 0, 1, &scissor);
 
-    m_mesh->DrawMesh(_commandBuffer);
-    
+    for (const auto& call : m_drawCalls)
+    {
+        call(_commandBuffer);
+    }
+
+    // bool result = m_drawCalls.empty();
+
     vkCmdEndRenderPass(_commandBuffer);
     
     if (vkEndCommandBuffer(_commandBuffer) != VK_SUCCESS)
@@ -897,16 +859,7 @@ void Renderer::CleanupSwapChain() const
 
 void Renderer::UpdateUniformBuffer(const uint32_t _currentImage) const
 {
-    static auto lastTime = high_resolution_clock::now();
-
-    const auto currentTime = high_resolution_clock::now();
-    const float deltaTime = duration<float>(currentTime - lastTime).count();
-
-    // std::cout << "FPS: " << static_cast<int>(1.f / deltaTime) << std::endl;
-
-    m_mesh->UpdateMesh(deltaTime);
-
-    lastTime = currentTime;
+    // TODO - implement uniform buffer updates
 }
 
 VkCommandBuffer Renderer::BeginSingleTimeCommands()

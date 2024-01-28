@@ -23,6 +23,9 @@ Mesh::Mesh(std::string _meshPath, const bool _logLoadTime) : m_meshPath(std::mov
         const float totalTime = static_cast<int16_t>(duration<float, milliseconds::period>(endTime - startTime).count());
         std::cout << "Mesh at \"" << m_meshPath << "\" loaded in " << totalTime << "ms" << std::endl;
     }
+
+    // Add draw call to renderer pass
+    Renderer::GetInstance()->AddDrawCall([this](const VkCommandBuffer _commandBuffer) {DrawMesh(_commandBuffer);});
 }
 
 Mesh::~Mesh()
@@ -48,12 +51,7 @@ void Mesh::DrawMesh(const VkCommandBuffer _commandBuffer) const
 
 void Mesh::UpdateMesh(const float _deltaTime)
 {
-    // Update models' matrix
-    transform.rotation = rotate(transform.rotation, _deltaTime * glm::radians(30.f), glm::vec3(0, 0, 1));
-    static float accumulatedTime = 0.f;
-    transform.position.z = 0.25f * sinf(accumulatedTime += _deltaTime);
-    
-    material->ubo.model = transform.GetMatrix();
+    material->ubo.model = transform.GetWorldMatrix();
     material->UpdateMaterial();
 }
 

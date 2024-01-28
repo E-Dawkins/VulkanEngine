@@ -3,16 +3,25 @@
 class Transform
 {
 public:
-    Transform();
-    Transform(glm::vec3 _position, glm::vec3 _eulerAngles, glm::vec3 _scale);
+    Transform() = default;
 
-    glm::mat4 GetMatrix() const;
+    void UpdateTransform();
     
-public:
-    glm::vec3 position;
-    glm::quat rotation;
-    glm::vec3 scale;
+    /* Getters */
+    glm::mat4 GetWorldMatrix() const;
+    glm::mat4 GetLocalMatrix() const;
+
+    /* Setters */
+    void SetParent(Transform* _parent) { m_parent = _parent; }
     
-private:
-    glm::mat4 m_matrix = glm::mat4(1.f);
+// private:
+    glm::vec3 m_worldPosition = glm::vec3(0);
+    glm::quat m_worldRotation = glm::quat(1, 0, 0, 0);
+    glm::vec3 m_worldScale = glm::vec3(1);
+    
+    glm::vec3 m_localPosition = glm::vec3(0);
+    glm::quat m_localRotation = glm::quat(1, 0, 0, 0);
+    glm::vec3 m_localScale = glm::vec3(1);
+
+    Transform* m_parent = nullptr;
 };

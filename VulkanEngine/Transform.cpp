@@ -1,25 +1,33 @@
 ﻿#include "pch.h"
 #include "Transform.h"
 
-Transform::Transform()
+void Transform::UpdateTransform()
 {
-    position = glm::vec3(0.f);
-    rotation = glm::quat(1, 0, 0, 0);
-    scale = glm::vec3(1.f);
+    // Using the local variables + parent variables, generate the world variables
+    if (m_parent)
+    {
+        m_parent->UpdateTransform();
+
+        m_worldPosition = m_parent->m_worldPosition + m_localPosition;
+        m_worldRotation = m_parent->m_worldRotation * m_localRotation;
+        m_worldScale = m_parent->m_worldScale * m_localScale;
+    }
 }
 
-Transform::Transform(glm::vec3 _position, glm::vec3 _eulerAngles, glm::vec3 _scale)
+glm::mat4 Transform::GetWorldMatrix() const
 {
-    position = _position;
-    rotation = _eulerAngles;
-    scale = _scale;
+    const glm::mat4 positionMatrix = translate(glm::mat4(1.f), m_worldPosition);
+    const glm::mat4 rotationMatrix = mat4_cast(m_worldRotation);
+    const glm::mat4 scaleMatrix = scale(glm::mat4(1.f), m_worldScale);
+    
+    return positionMatrix * rotationMatrix * scaleMatrix;
 }
 
-glm::mat4 Transform::GetMatrix() const
+glm::mat4 Transform::GetLocalMatrix() const
 {
-    const glm::mat4 positionMatrix = glm::translate(glm::mat4(1.f), position);
-    const glm::mat4 rotationMatrix = glm::mat4_cast(rotation);
-    const glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.f), scale);
+    const glm::mat4 positionMatrix = translate(glm::mat4(1.f), m_localPosition);
+    const glm::mat4 rotationMatrix = mat4_cast(m_localRotation);
+    const glm::mat4 scaleMatrix = scale(glm::mat4(1.f), m_localScale);
     
     return positionMatrix * rotationMatrix * scaleMatrix;
 }
