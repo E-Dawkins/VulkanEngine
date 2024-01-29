@@ -38,5 +38,8 @@ void PhysicsSolver::CheckForCollisions() const
                 collider1->ResolveCollision(collider2);
             }
         }
+
+        // After checking collisions with other objects, clear collision list
+        collider1->ClearPreviousCollisions();
     }
 }

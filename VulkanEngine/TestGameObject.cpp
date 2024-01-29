@@ -9,7 +9,15 @@
 void TestGameObject::BeginPlay()
 {
     GameObject::BeginPlay();
-
+    
+    // Initialize sphere collider
+    m_sphereColl = ObjectComponent::CreateComponent<SphereColliderComponent>("Test");
+    m_rootComponent = m_sphereColl;
+    
+    m_sphereColl->SetRadius(0.35f);
+    m_sphereColl->SetKinematic(true);
+    m_sphereColl->transform.m_worldScale = glm::vec3(0.5f);
+    
     // Initialize mesh component
     m_meshComponent = ObjectComponent::CreateComponent<MeshComponent>("Mesh");
     m_meshComponent->AttachTo(m_rootComponent);
@@ -20,13 +28,6 @@ void TestGameObject::BeginPlay()
     
     m_meshComponent->GetMesh()->InitMesh("models/viking_room.obj", true);
     m_meshComponent->GetMesh()->material = material;
-    
-    // Initialize sphere collider
-    m_sphereColl = ObjectComponent::CreateComponent<SphereColliderComponent>("Sphere Collider");
-    m_sphereColl->AttachTo(m_rootComponent);
-    m_sphereColl->SetRadius(0.35f);
-
-    m_rootComponent->transform.m_worldScale = glm::vec3(0.5f);
 }
 
 void TestGameObject::Tick(const float _deltaSeconds)

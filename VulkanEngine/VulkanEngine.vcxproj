@@ -213,6 +213,7 @@
     <ClInclude Include="ColliderComponent.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GravityGameObject.h" />
+    <ClInclude Include="StringConverter.h" />
     <ClInclude Include="Material_Base.h" />
     <ClInclude Include="Material_Unlit.h" />
     <ClInclude Include="Mesh.h" />

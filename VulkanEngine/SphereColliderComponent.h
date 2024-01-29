@@ -6,7 +6,7 @@ class SphereColliderComponent : public ColliderComponent
 public:
     SphereColliderComponent();
     
-    void SphereCollision(ColliderComponent* _otherCollider) override;
+    bool SphereCollision(ColliderComponent* _otherCollider, float& _collisionVelocity, glm::vec3& _collisionPoint) override;
 
     /* Setters */
     void SetRadius(const float _radius) { m_radius = _radius; }
