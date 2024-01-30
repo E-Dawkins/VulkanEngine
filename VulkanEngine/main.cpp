@@ -19,6 +19,12 @@ int main()
     gravityObject->BeginPlay();
     
     auto lastTime = high_resolution_clock::now();
+
+    // Start the physics thread
+    std::thread physicsThread([]
+    {
+        PhysicsSolver::GetInstance()->Init();
+    });
         
     while (Renderer::GetInstance()->IsRunning())
     {
@@ -28,11 +34,11 @@ int main()
             const float deltaTime = duration<float>(currentTime - lastTime).count();
 
             // TODO - remove rudimentary fps cap
-            constexpr int fps = 60;
-            if (deltaTime < 1.f / static_cast<float>(fps))
-            {
-                continue;
-            }
+            // constexpr int fps = 60;
+            // if (deltaTime < 1.f / static_cast<float>(fps))
+            // {
+            //     continue;
+            // }
 
             g_timeSinceAppStart += deltaTime;
                 
@@ -40,9 +46,6 @@ int main()
             testObject->Tick(deltaTime);
             testObject2->Tick(deltaTime);
             gravityObject->Tick(deltaTime);
-
-            // Then we update physics
-            PhysicsSolver::GetInstance()->CheckForCollisions();
 
             // Drawing will happen at the end of the frame
             glfwPollEvents();
@@ -56,6 +59,9 @@ int main()
         }
     }
 
+    // Wait for physics thread to finish
+    physicsThread.join();
+    
     vkDeviceWaitIdle(Renderer::GetInstance()->GetDevice());
         
     Renderer::GetInstance()->Cleanup();

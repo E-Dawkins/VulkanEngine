@@ -19,10 +19,14 @@ public:
     void RegisterCollider(ColliderComponent* _collider);
     void UnRegisterCollider(const ColliderComponent* _collider);
 
+    void Init();
+    
+private:
+    void UpdatePhysicsBodies(float _deltaSeconds) const;
     void CheckForCollisions() const;
     
 private:
     inline static PhysicsSolver* m_instance = nullptr;
-
+    
     std::vector<ColliderComponent*> m_colliders{};
 };

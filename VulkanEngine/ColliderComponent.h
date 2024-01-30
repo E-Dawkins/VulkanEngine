@@ -7,8 +7,6 @@ class ColliderComponent : public SceneComponent
 {
 public:
     ColliderComponent();
-
-    void TickComponent(float _deltaSeconds) override;
     
     void ResolveCollision(ColliderComponent* _otherCollider);
 
@@ -23,6 +21,8 @@ public:
     void ClearPreviousCollisions() { m_previousCollisions.clear(); }
     
 protected:
+    friend class PhysicsSolver;
+    
     enum ColliderType
     {
         CT_UNKNOWN,

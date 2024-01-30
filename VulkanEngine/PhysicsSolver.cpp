@@ -27,6 +27,49 @@ void PhysicsSolver::UnRegisterCollider(const ColliderComponent* _collider)
     }
 }
 
+void PhysicsSolver::Init()
+{
+    constexpr int tickRate = 120;
+    constexpr float targetDelta = 1.f / static_cast<float>(tickRate);
+
+    while (Renderer::GetInstance()->IsRunning())
+    {
+        auto frameStart = steady_clock::now();
+        
+        UpdatePhysicsBodies(targetDelta);
+        CheckForCollisions();
+        
+        // force wait until end of 'frame', i.e. 1 / tickRate
+        auto workTime = steady_clock::now() - frameStart;
+
+        while (duration<float>(workTime).count() < targetDelta)
+        {
+            workTime = steady_clock::now() - frameStart;
+        }
+
+        // const float total = duration<float>(steady_clock::now() - frameStart).count();
+        // std::cout << total << "ms | FPS " << 1.f / total << std::endl;
+    }
+}
+
+void PhysicsSolver::UpdatePhysicsBodies(const float _deltaSeconds) const
+{
+    for (const auto collider : m_colliders)
+    {
+        if (collider->m_kinematic)
+        {
+            continue;
+        }
+    
+        if (collider->m_useGravity)
+        {
+            collider->m_velocity += g_gravity * _deltaSeconds;
+        }
+
+        collider->transform.SetWorldPosition(collider->transform.GetWorldPosition() + (collider->m_velocity * _deltaSeconds));
+    }
+}
+
 void PhysicsSolver::CheckForCollisions() const
 {
     for (const auto collider1 : m_colliders)

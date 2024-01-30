@@ -8,23 +8,6 @@ ColliderComponent::ColliderComponent()
     PhysicsSolver::GetInstance()->RegisterCollider(this);
 }
 
-void ColliderComponent::TickComponent(float _deltaSeconds)
-{
-    SceneComponent::TickComponent(_deltaSeconds);
-
-    if (m_kinematic)
-    {
-        return;
-    }
-    
-    if (m_useGravity)
-    {
-        m_velocity += g_gravity;
-    }
-
-    transform.SetWorldPosition(transform.GetWorldPosition() + m_velocity * _deltaSeconds);
-}
-
 void ColliderComponent::ResolveCollision(ColliderComponent* _otherCollider)
 {
     // If we have already collided with the other collider, skip calculations
