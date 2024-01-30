@@ -15,7 +15,7 @@ int main()
     
     testObject->BeginPlay();
     testObject2->BeginPlay();
-    testObject2->GetRoot()->transform.m_worldPosition = {0, 0.9825f, 0};
+    testObject2->GetRoot()->transform.SetWorldPosition(glm::vec3(0, 0.9825f, 0));
     gravityObject->BeginPlay();
     
     auto lastTime = high_resolution_clock::now();
@@ -28,11 +28,11 @@ int main()
             const float deltaTime = duration<float>(currentTime - lastTime).count();
 
             // TODO - remove rudimentary fps cap
-            // constexpr int fps = 60;
-            // if (deltaTime < 1.f / static_cast<float>(fps))
-            // {
-            //     continue;
-            // }
+            constexpr int fps = 60;
+            if (deltaTime < 1.f / static_cast<float>(fps))
+            {
+                continue;
+            }
 
             g_timeSinceAppStart += deltaTime;
                 

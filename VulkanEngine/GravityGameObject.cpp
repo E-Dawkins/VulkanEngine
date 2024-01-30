@@ -15,8 +15,8 @@ void GravityGameObject::BeginPlay()
     
     m_sphereColl->SetRadius(0.35f);
     m_sphereColl->SetUseGravity(true);
-    m_sphereColl->transform.m_worldScale = glm::vec3(0.5f);
-    m_sphereColl->transform.m_worldPosition = glm::vec3(0, 0.1f, 2.f);
+    m_sphereColl->transform.SetWorldScale(glm::vec3(0.5f));
+    m_sphereColl->transform.SetWorldPosition(glm::vec3(0, 0.1f, 2.f));
     
     // Initialize mesh component
     m_meshComp = ObjectComponent::CreateComponent<MeshComponent>("Mesh");

@@ -9,7 +9,7 @@ SphereColliderComponent::SphereColliderComponent()
 bool SphereColliderComponent::SphereCollision(ColliderComponent* _otherCollider, float& _collisionVelocity, glm::vec3& _collisionPoint)
 {
     const auto otherSphere = dynamic_cast<SphereColliderComponent*>(_otherCollider);
-    const float distance = glm::distance(transform.m_worldPosition, otherSphere->transform.m_worldPosition);
+    const float distance = glm::distance(transform.GetWorldPosition(), otherSphere->transform.GetWorldPosition());
 
     // Not colliding, return false
     if (distance > m_radius + otherSphere->m_radius)
@@ -21,7 +21,7 @@ bool SphereColliderComponent::SphereCollision(ColliderComponent* _otherCollider,
     _collisionVelocity = length(m_velocity + otherSphere->m_velocity);
 
     // Collision point is the mid point between both colliders
-    _collisionPoint = (transform.m_worldPosition + otherSphere->transform.m_worldPosition) * 0.5f;
+    _collisionPoint = (transform.GetWorldPosition() + otherSphere->transform.GetWorldPosition()) * 0.5f;
     
     return true;
 }

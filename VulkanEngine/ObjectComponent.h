@@ -25,7 +25,7 @@ protected:
     std::vector<ObjectComponent*> m_attachedComponents;
 };
 
-template<class T = ObjectComponent, std::enable_if_t<std::is_base_of_v<ObjectComponent, T>>*>
+template<class T, std::enable_if_t<std::is_base_of_v<ObjectComponent, T>>*>
 T* ObjectComponent::CreateComponent(std::string _name)
 {
     T* createdComp = new T();

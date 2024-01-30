@@ -16,7 +16,7 @@ void TestGameObject::BeginPlay()
     
     m_sphereColl->SetRadius(0.35f);
     m_sphereColl->SetKinematic(true);
-    m_sphereColl->transform.m_worldScale = glm::vec3(0.5f);
+    m_sphereColl->transform.SetWorldScale(glm::vec3(0.5f));
     
     // Initialize mesh component
     m_meshComponent = ObjectComponent::CreateComponent<MeshComponent>("Mesh");

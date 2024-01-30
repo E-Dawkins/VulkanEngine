@@ -22,7 +22,7 @@ void ColliderComponent::TickComponent(float _deltaSeconds)
         m_velocity += g_gravity;
     }
 
-    transform.m_worldPosition += m_velocity * _deltaSeconds;
+    transform.SetWorldPosition(transform.GetWorldPosition() + m_velocity * _deltaSeconds);
 }
 
 void ColliderComponent::ResolveCollision(ColliderComponent* _otherCollider)
@@ -48,7 +48,7 @@ void ColliderComponent::ResolveCollision(ColliderComponent* _otherCollider)
     // If the colliders did collide, then calculate their individual output velocity
     if (didCollide)
     {
-        const glm::vec3 collisionDir = normalize(transform.m_worldPosition - collisionPoint);
+        const glm::vec3 collisionDir = normalize(transform.GetWorldPosition() - collisionPoint);
         const glm::vec3 finalVelocity = collisionDir * collisionVelocity;
         
         // If either collider is kinematic, then set the non-kinematic colliders' final velocity to the net velocity
@@ -65,10 +65,10 @@ void ColliderComponent::ResolveCollision(ColliderComponent* _otherCollider)
             m_velocity += finalVelocity;
             _otherCollider->m_velocity += -finalVelocity;
         }
-    }
 
-    // Add this collider to list of resolved colliders, to avoid re-running calculations
-    _otherCollider->m_previousCollisions.push_back(this);
+        // Add this collider to list of resolved colliders, to avoid re-running calculations
+        _otherCollider->m_previousCollisions.push_back(this);
+    }
 }
 
 bool ColliderComponent::SphereCollision(ColliderComponent* _otherCollider, float& _collisionVelocity, glm::vec3& _collisionPoint)
