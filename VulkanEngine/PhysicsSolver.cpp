@@ -36,9 +36,6 @@ void PhysicsSolver::Init()
     {
         auto frameStart = steady_clock::now();
         
-        UpdatePhysicsBodies(targetDelta);
-        CheckForCollisions();
-        
         // force wait until end of 'frame', i.e. 1 / tickRate
         auto workTime = steady_clock::now() - frameStart;
 
@@ -47,8 +44,12 @@ void PhysicsSolver::Init()
             workTime = steady_clock::now() - frameStart;
         }
 
-        // const float total = duration<float>(steady_clock::now() - frameStart).count();
-        // std::cout << total << "ms | FPS " << 1.f / total << std::endl;
+        const float actualDelta = duration<float>(workTime).count();
+        
+        UpdatePhysicsBodies(actualDelta);
+        CheckForCollisions();
+        
+        // std::cout << actualDelta << "ms | FPS " << 1.f / actualDelta << std::endl;
     }
 }
 

@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <map>
 #include <optional>
 #include <vector>
 
@@ -99,6 +100,9 @@ public:
     bool IsRunning() const { return !glfwWindowShouldClose(m_window); }
 
     void AddDrawCall(const std::function<void(VkCommandBuffer)>& _drawCall) {m_drawCalls.push_back(_drawCall); }
+
+    void LoadMesh(const std::string& _meshPath, const std::string& _meshName, bool _logLoadTime = false);
+    std::shared_ptr<Mesh> GetMesh(const std::string& _meshName);
     
 private:
     void InitWindow();
@@ -185,4 +189,6 @@ private:
     uint32_t m_currentFrame = 0;
 
     std::vector<std::function<void(VkCommandBuffer)>> m_drawCalls{};
+
+    std::map<std::string, std::shared_ptr<Mesh>> m_meshes;
 };

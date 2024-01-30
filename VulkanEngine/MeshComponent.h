@@ -1,6 +1,8 @@
 ﻿#pragma once
-#include "Mesh.h"
 #include "SceneComponent.h"
+
+#include "Material_Base.h"
+#include "Mesh.h"
 
 class MeshComponent : public SceneComponent
 {
@@ -9,8 +11,13 @@ public:
     
     void TickComponent(float _deltaSeconds) override;
 
-    Mesh*& GetMesh() { return m_meshPtr; }
+    void SetMesh(const std::shared_ptr<Mesh>& _mesh) { m_meshPtr = _mesh; }
+    void SetMaterial(Material_Base* _material) { m_material = _material; }
 
 private:
-    Mesh* m_meshPtr = new Mesh();
+    void DrawMesh(VkCommandBuffer _commandBuffer) const;
+
+private:
+    std::shared_ptr<Mesh> m_meshPtr{new Mesh()};
+    Material_Base* m_material = nullptr;
 };

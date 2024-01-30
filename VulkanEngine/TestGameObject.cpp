@@ -25,9 +25,9 @@ void TestGameObject::BeginPlay()
     auto* material = new Material_Unlit("shaders/unlit.vert.spv", "shaders/unlit.frag.spv", Renderer::GetInstance()->GetRenderPass());
     material->SetTexture(new Texture("textures/viking_room.png"));
     material->Init();
-    
-    m_meshComponent->GetMesh()->InitMesh("models/viking_room.obj", true);
-    m_meshComponent->GetMesh()->material = material;
+
+    m_meshComponent->SetMesh(Renderer::GetInstance()->GetMesh("house"));
+    m_meshComponent->SetMaterial(material);
 }
 
 void TestGameObject::Tick(const float _deltaSeconds)

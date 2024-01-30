@@ -3,16 +3,20 @@
 
 MeshComponent::MeshComponent()
 {
-    // Attach the Mesh transform to the MeshComp transform
-    m_meshPtr->transform.SetParent(&transform);
+    // Add draw call to renderer pass
+    Renderer::GetInstance()->AddDrawCall([this](const VkCommandBuffer _commandBuffer) {DrawMesh(_commandBuffer);});
 }
 
 void MeshComponent::TickComponent(const float _deltaSeconds)
 {
-    if (m_meshPtr)
-    {
-        m_meshPtr->transform.UpdateTransform();
-        m_meshPtr->UpdateMesh(_deltaSeconds);
-    }
+    SceneComponent::TickComponent(_deltaSeconds);
+    
+    m_material->ubo.model = transform.GetWorldMatrix();
+    m_material->UpdateMaterial();
+}
+
+void MeshComponent::DrawMesh(const VkCommandBuffer _commandBuffer) const
+{
+    m_meshPtr->DrawMesh(_commandBuffer, m_material);
 }
 

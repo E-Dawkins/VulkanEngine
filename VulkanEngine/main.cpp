@@ -8,6 +8,9 @@
 int main() 
 {
     Renderer::GetInstance()->Initialize(800, 600);
+
+    // Load Meshes
+    Renderer::GetInstance()->LoadMesh("models/viking_room.obj", "house", true);
     
     auto* testObject = new TestGameObject();
     auto* testObject2 = new TestGameObject();
@@ -15,7 +18,7 @@ int main()
     
     testObject->BeginPlay();
     testObject2->BeginPlay();
-    testObject2->GetRoot()->transform.SetWorldPosition(glm::vec3(0, 0.9825f, 0));
+    testObject2->GetRoot()->transform.SetWorldPosition(glm::vec3(0, 1.65f, 0));
     gravityObject->BeginPlay();
     
     auto lastTime = high_resolution_clock::now();

@@ -13,6 +13,8 @@
 #include <optional>
 #include <set>
 
+#include "Mesh.h"
+
 void Renderer::Initialize(const int _width, const int _height, const int _maxFramesInFlight)
 {
     m_width = _width;
@@ -21,6 +23,18 @@ void Renderer::Initialize(const int _width, const int _height, const int _maxFra
     
     InitWindow();
     InitVulkan();
+}
+
+void Renderer::LoadMesh(const std::string& _meshPath, const std::string& _meshName, const bool _logLoadTime)
+{
+    const std::shared_ptr<Mesh> mesh(new Mesh());
+    mesh->InitMesh(_meshPath, _logLoadTime);
+    m_meshes[_meshName] = mesh;
+}
+
+std::shared_ptr<Mesh> Renderer::GetMesh(const std::string& _meshName)
+{
+    return m_meshes[_meshName];
 }
 
 void Renderer::InitWindow()

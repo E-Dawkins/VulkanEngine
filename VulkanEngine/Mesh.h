@@ -10,8 +10,7 @@ public:
     ~Mesh();
 
     void InitMesh(const std::string& _meshPath, bool _logInitTime = false);
-    void DrawMesh(VkCommandBuffer _commandBuffer) const;
-    void UpdateMesh(float _deltaTime);
+    void DrawMesh(VkCommandBuffer _commandBuffer, const Material_Base* _material) const;
 
 private:
     void LoadModel();
@@ -54,9 +53,6 @@ public:
             return pos == _other.pos && texCoord == _other.texCoord;
         }
     };
-
-    Transform transform = Transform();
-    Material_Base* material = nullptr;
     
 private:
     std::string m_meshPath;

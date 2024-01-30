@@ -35,14 +35,11 @@ void Mesh::InitMesh(const std::string& _meshPath, const bool _logInitTime)
         const float totalTime = static_cast<int16_t>(duration<float, milliseconds::period>(endTime - startTime).count());
         std::cout << "Mesh at \"" << m_meshPath << "\" loaded in " << totalTime << "ms" << std::endl;
     }
-
-    // Add draw call to renderer pass
-    Renderer::GetInstance()->AddDrawCall([this](const VkCommandBuffer _commandBuffer) {DrawMesh(_commandBuffer);});
 }
 
-void Mesh::DrawMesh(const VkCommandBuffer _commandBuffer) const
+void Mesh::DrawMesh(const VkCommandBuffer _commandBuffer, const Material_Base* _material) const
 {
-    material->RenderMaterial(_commandBuffer);
+    _material->RenderMaterial(_commandBuffer);
     
     const VkBuffer vertexBuffers[] = {m_vertexBuffer};
     constexpr VkDeviceSize offsets[] = {0};
@@ -50,12 +47,6 @@ void Mesh::DrawMesh(const VkCommandBuffer _commandBuffer) const
     vkCmdBindIndexBuffer(_commandBuffer, m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
     vkCmdDrawIndexed(_commandBuffer, static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
-}
-
-void Mesh::UpdateMesh(const float _deltaTime)
-{
-    material->ubo.model = transform.GetWorldMatrix();
-    material->UpdateMaterial();
 }
 
 void Mesh::LoadModel()

@@ -25,9 +25,9 @@ void GravityGameObject::BeginPlay()
     auto* material = new Material_Unlit("shaders/unlit.vert.spv", "shaders/unlit.frag.spv", Renderer::GetInstance()->GetRenderPass());
     material->SetTexture(new Texture("textures/viking_room.png"));
     material->Init();
-    
-    m_meshComp->GetMesh()->InitMesh("models/viking_room.obj", true);
-    m_meshComp->GetMesh()->material = material;
+
+    m_meshComp->SetMesh(Renderer::GetInstance()->GetMesh("house"));
+    m_meshComp->SetMaterial(material);
 }
 
 void GravityGameObject::Tick(const float _deltaSeconds)
