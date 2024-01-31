@@ -19,7 +19,10 @@ public:
     {
         m_rootComponent->TickComponent(_deltaSeconds);
     }
-    virtual void EndPlay() {}
+    virtual void EndPlay()
+    {
+        m_rootComponent->CleanupComponent();
+    }
 
     /* Getters */
     SceneComponent* GetRoot() const { return m_rootComponent; }

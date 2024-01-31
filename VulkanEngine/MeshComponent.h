@@ -10,6 +10,7 @@ public:
     MeshComponent();
     
     void TickComponent(float _deltaSeconds) override;
+    void CleanupComponent() override;
 
     void SetMesh(const std::shared_ptr<Mesh>& _mesh) { m_meshPtr = _mesh; }
     void SetMaterial(Material_Base* _material) { m_material = _material; }

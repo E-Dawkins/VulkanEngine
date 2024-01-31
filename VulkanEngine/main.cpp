@@ -11,15 +11,21 @@ int main()
 
     // Load Meshes
     Renderer::GetInstance()->LoadMesh("models/viking_room.obj", "house", true);
-    
-    auto* testObject = new TestGameObject();
-    auto* testObject2 = new TestGameObject();
-    auto* gravityObject = new GravityGameObject();
-    
-    testObject->BeginPlay();
-    testObject2->BeginPlay();
-    testObject2->GetRoot()->transform.SetWorldPosition(glm::vec3(0, 1.65f, 0));
-    gravityObject->BeginPlay();
+
+    const std::array<GameObject*, 3> gameObjects =
+    {
+        new TestGameObject(),
+        new TestGameObject(),
+        new GravityGameObject()
+    };
+
+    for (const auto object : gameObjects)
+    {
+        object->BeginPlay();
+    }
+
+    // TODO - remove explicit position setting
+    gameObjects[1]->GetRoot()->transform.SetWorldPosition(glm::vec3(0, 1.65f, 0));
     
     auto lastTime = high_resolution_clock::now();
 
@@ -36,19 +42,13 @@ int main()
             const auto currentTime = high_resolution_clock::now();
             const float deltaTime = duration<float>(currentTime - lastTime).count();
 
-            // TODO - remove rudimentary fps cap
-            // constexpr int fps = 60;
-            // if (deltaTime < 1.f / static_cast<float>(fps))
-            // {
-            //     continue;
-            // }
-
             g_timeSinceAppStart += deltaTime;
                 
             // Game object ticks happen first
-            testObject->Tick(deltaTime);
-            testObject2->Tick(deltaTime);
-            gravityObject->Tick(deltaTime);
+            for (const auto object : gameObjects)
+            {
+                object->Tick(deltaTime);
+            }
 
             // Drawing will happen at the end of the frame
             glfwPollEvents();
@@ -64,9 +64,17 @@ int main()
 
     // Wait for physics thread to finish
     physicsThread.join();
-    
+
+    // Wait for renderer to finish with this frame
     vkDeviceWaitIdle(Renderer::GetInstance()->GetDevice());
-        
+
+    // Cleanup all game objects (including materials and their graphics resources)
+    for (const auto object : gameObjects)
+    {
+        object->EndPlay();
+    }
+
+    // Finally cleanup the renderer
     Renderer::GetInstance()->Cleanup();
 
     return EXIT_SUCCESS;

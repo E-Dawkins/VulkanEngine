@@ -35,3 +35,12 @@ void ObjectComponent::TickComponent(const float _deltaSeconds)
         comp->TickComponent(_deltaSeconds);
     }
 }
+
+void ObjectComponent::CleanupComponent()
+{
+    // Cleanup all attached components
+    for (ObjectComponent* comp : m_attachedComponents)
+    {
+        comp->CleanupComponent();
+    }
+}

@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <vector>
 #include <optional>
+#include <ranges>
 #include <set>
 
 #include "Mesh.h"
@@ -71,6 +72,12 @@ void Renderer::InitVulkan()
 void Renderer::Cleanup() const
 {
     CleanupSwapChain();
+
+    // Bitwise or '|' with std::views::values will loop over the values of the map
+    for (auto mesh : m_meshes | std::views::values)
+    {
+        delete mesh.get();
+    }
         
     vkDestroyRenderPass(m_device, m_renderPass, nullptr);
         

@@ -15,6 +15,13 @@ void MeshComponent::TickComponent(const float _deltaSeconds)
     m_material->UpdateMaterial();
 }
 
+void MeshComponent::CleanupComponent()
+{
+    SceneComponent::CleanupComponent();
+
+    delete m_material;
+}
+
 void MeshComponent::DrawMesh(const VkCommandBuffer _commandBuffer) const
 {
     m_meshPtr->DrawMesh(_commandBuffer, m_material);

@@ -12,6 +12,7 @@ public:
     void RemoveFrom(ObjectComponent* _parentComp) const;
     
     virtual void TickComponent(float _deltaSeconds);
+    virtual void CleanupComponent();
     
     /* Getters */
     std::string GetName() const { return m_name; }
