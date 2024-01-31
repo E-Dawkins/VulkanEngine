@@ -41,6 +41,7 @@ void Material_Base::RenderMaterial(const VkCommandBuffer _commandBuffer) const
 {
     vkCmdBindPipeline(_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
     vkCmdBindDescriptorSets(_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSet, 0, nullptr);
+    vkCmdPushConstants(_commandBuffer, m_pipelineLayout, m_pushConstantRange.stageFlags, m_pushConstantRange.offset, m_pushConstantRange.size, &pushConstants);
 }
 
 void Material_Base::UpdateMaterial()
@@ -283,8 +284,8 @@ void Material_Base::CreateGraphicsPipeline()
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 1;
     pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
-    pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(m_pushConstantRanges.size());
-    pipelineLayoutInfo.pPushConstantRanges = m_pushConstantRanges.data();
+    pipelineLayoutInfo.pushConstantRangeCount = 1;
+    pipelineLayoutInfo.pPushConstantRanges = &m_pushConstantRange;
 
     if (vkCreatePipelineLayout(Renderer::GetInstance()->GetDevice(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS)
     {
@@ -352,4 +353,11 @@ void Material_Base::CreateDescriptorSets()
     AppendExtraDescriptorWrites(descriptorWrites);
 
     vkUpdateDescriptorSets(Renderer::GetInstance()->GetDevice(), (uint32_t)descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+}
+
+void Material_Base::SetupPushConstantRanges()
+{
+    m_pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    m_pushConstantRange.offset = 0;
+    m_pushConstantRange.size = sizeof(PushConstantData);
 }

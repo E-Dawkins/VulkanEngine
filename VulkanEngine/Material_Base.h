@@ -19,20 +19,25 @@ private:
     void CreateDescriptorSetLayout();
     virtual void CreateGraphicsPipeline();
     void CreateDescriptorSets();
+    void SetupPushConstantRanges();
 
 protected:
     virtual void AppendSetLayoutBindings(std::vector<VkDescriptorSetLayoutBinding>& _bindings) {}
     virtual void AppendExtraPoolSizes(std::vector<VkDescriptorPoolSize>& _poolSizes) {}
     virtual void AppendExtraDescriptorWrites(std::vector<VkWriteDescriptorSet>& _descriptorWrites) {}
-    virtual void SetupPushConstantRanges() {}
 
 public:
     struct UniformBufferObject
     {
-        alignas(16) glm::mat4 model;
         alignas(16) glm::mat4 view;
         alignas(16) glm::mat4 proj;
     } ubo{};
+
+    struct PushConstantData
+    {
+        glm::mat4 model = glm::mat4(1);
+        glm::vec4 color = glm::vec4(1);
+    } pushConstants{};
     
 protected:
     std::string m_vertexShaderPath;
@@ -41,6 +46,10 @@ protected:
     VkShaderModule m_vertShaderModule{};
     VkShaderModule m_fragShaderModule{};
 
+    VkBuffer m_dynamicBuffer{};
+    VkDeviceMemory m_dynamicBufferMemory{};
+    void* m_dynamicBufferMapped{};
+    
     VkBuffer m_uniformBuffer{};
     VkDeviceMemory m_uniformBufferMemory{};
     void* m_uniformBufferMapped{};
@@ -49,7 +58,7 @@ protected:
     VkDescriptorSetLayout m_descriptorSetLayout{};
     VkDescriptorSet m_descriptorSet{};
 
-    std::vector<VkPushConstantRange> m_pushConstantRanges{};
+    VkPushConstantRange m_pushConstantRange{};
 
     VkPipelineLayout m_pipelineLayout{};
     VkPipeline m_graphicsPipeline{};

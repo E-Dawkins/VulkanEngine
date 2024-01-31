@@ -17,18 +17,9 @@ public:
     }
 
 private:
-    void RenderMaterial(VkCommandBuffer _commandBuffer) const override;
     void AppendSetLayoutBindings(std::vector<VkDescriptorSetLayoutBinding>& _bindings) override;
     void AppendExtraPoolSizes(std::vector<VkDescriptorPoolSize>& _poolSizes) override;
     void AppendExtraDescriptorWrites(std::vector<VkWriteDescriptorSet>& _descriptorWrites) override;
-    void SetupPushConstantRanges() override;
-
-public:
-    struct PushConstantData
-    {
-        glm::vec4 color = glm::vec4(1);
-    } pushConstants{};
-
 
 private:
     std::shared_ptr<Texture> m_texture = nullptr;

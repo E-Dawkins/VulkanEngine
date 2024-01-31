@@ -11,7 +11,7 @@ void MeshComponent::TickComponent(const float _deltaSeconds)
 {
     SceneComponent::TickComponent(_deltaSeconds);
     
-    m_material->ubo.model = transform.GetWorldMatrix();
+    m_material->pushConstants.model = transform.GetWorldMatrix();
     m_material->UpdateMaterial();
 }
 

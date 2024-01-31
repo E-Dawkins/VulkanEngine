@@ -3,13 +3,6 @@
 
 #include "TextureSampler.h"
 
-void Material_Unlit::RenderMaterial(VkCommandBuffer _commandBuffer) const
-{
-    Material_Base::RenderMaterial(_commandBuffer);
-    
-    vkCmdPushConstants(_commandBuffer, m_pipelineLayout, m_pushConstantRanges[0].stageFlags, m_pushConstantRanges[0].offset, m_pushConstantRanges[0].size, &pushConstants);
-}
-
 void Material_Unlit::AppendSetLayoutBindings(std::vector<VkDescriptorSetLayoutBinding>& _bindings)
 {
     // Add binding for texture sampler
@@ -45,12 +38,4 @@ void Material_Unlit::AppendExtraDescriptorWrites(std::vector<VkWriteDescriptorSe
     _descriptorWrites.back().descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     _descriptorWrites.back().descriptorCount = 1;
     _descriptorWrites.back().pImageInfo = imageInfo;
-}
-
-void Material_Unlit::SetupPushConstantRanges()
-{
-    m_pushConstantRanges.emplace_back();
-    m_pushConstantRanges[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-    m_pushConstantRanges[0].offset = 0;
-    m_pushConstantRanges[0].size = sizeof(PushConstantData);
 }
