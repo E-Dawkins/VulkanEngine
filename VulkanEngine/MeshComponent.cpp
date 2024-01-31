@@ -10,20 +10,17 @@ MeshComponent::MeshComponent()
 void MeshComponent::TickComponent(const float _deltaSeconds)
 {
     SceneComponent::TickComponent(_deltaSeconds);
-    
-    m_material->pushConstants.model = transform.GetWorldMatrix();
-    m_material->UpdateMaterial();
 }
 
 void MeshComponent::CleanupComponent()
 {
     SceneComponent::CleanupComponent();
-
-    delete m_material;
 }
 
 void MeshComponent::DrawMesh(const VkCommandBuffer _commandBuffer) const
 {
+    m_material->pushConstants.model = transform.GetWorldMatrix();
+    m_material->UpdateMaterial();
     m_material->RenderMaterial(_commandBuffer);
     m_meshPtr->DrawMesh(_commandBuffer);
 }

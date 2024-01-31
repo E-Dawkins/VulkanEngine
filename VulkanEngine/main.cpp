@@ -1,6 +1,8 @@
 #include "pch.h"
 
 #include "GravityGameObject.h"
+#include "Material_Base.h"
+#include "Material_Unlit.h"
 #include "Renderer.h"
 #include "PhysicsSolver.h"
 #include "TestGameObject.h"
@@ -15,8 +17,13 @@ int main()
     // Load Textures
     Renderer::GetInstance()->LoadTexture("textures/viking_room.png", "house");
 
+    // Load Materials
+    const auto material = Renderer::GetInstance()->LoadMaterial<Material_Unlit>("shaders/unlit.vert.spv", "shaders/unlit.frag.spv", "house");
+    material->SetTexture(Renderer::GetInstance()->GetTexture("house"));
+    material->Init();
+
     // Initialize Game Objects
-    int rows = 10, cols = 10;
+    int rows = 100, cols = 100;
 
     std::vector<GameObject*> gameObjects;
     for (int i = 0; i < rows; i++)

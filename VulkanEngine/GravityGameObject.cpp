@@ -22,12 +22,7 @@ void GravityGameObject::BeginPlay()
     m_meshComponent->AttachTo(m_sphereColl);
 
     m_meshComponent->SetMesh(Renderer::GetInstance()->GetMesh("house"));
-
-    const auto material = new Material_Unlit("shaders/unlit.vert.spv", "shaders/unlit.frag.spv", Renderer::GetInstance()->GetRenderPass());
-    material->SetTexture(Renderer::GetInstance()->GetTexture("house"));
-    material->Init();
-    
-    m_meshComponent->SetMaterial(material);
+    m_meshComponent->SetMaterial(Renderer::GetInstance()->GetMaterial("house"));
 }
 
 void GravityGameObject::Tick(const float _deltaSeconds)

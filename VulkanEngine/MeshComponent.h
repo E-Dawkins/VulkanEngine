@@ -13,12 +13,12 @@ public:
     void CleanupComponent() override;
 
     void SetMesh(const std::shared_ptr<Mesh>& _mesh) { m_meshPtr = _mesh; }
-    void SetMaterial(Material_Base* _material) { m_material = _material; }
+    void SetMaterial(const std::shared_ptr<Material_Base>& _material) { m_material = _material; }
 
 private:
     void DrawMesh(VkCommandBuffer _commandBuffer) const;
 
 private:
     std::shared_ptr<Mesh> m_meshPtr{new Mesh()};
-    Material_Base* m_material = nullptr;
+    std::shared_ptr<Material_Base> m_material = nullptr;
 };

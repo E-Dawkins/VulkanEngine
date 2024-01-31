@@ -23,12 +23,7 @@ void TestGameObject::BeginPlay()
     m_meshComponent->AttachTo(GetRoot());
 
     m_meshComponent->SetMesh(Renderer::GetInstance()->GetMesh("house"));
-    
-    const auto material = new Material_Unlit("shaders/unlit.vert.spv", "shaders/unlit.frag.spv", Renderer::GetInstance()->GetRenderPass());
-    material->SetTexture(Renderer::GetInstance()->GetTexture("house"));
-    material->Init();
-    
-    m_meshComponent->SetMaterial(material);
+    m_meshComponent->SetMaterial(Renderer::GetInstance()->GetMaterial("house"));
 }
 
 void TestGameObject::Tick(const float _deltaSeconds)

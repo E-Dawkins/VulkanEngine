@@ -59,6 +59,11 @@ std::shared_ptr<TextureSampler> Renderer::GetTextureSampler(const std::shared_pt
     return m_textureSamplers[_texture];
 }
 
+std::shared_ptr<Material_Base> Renderer::GetMaterial(const std::string& _materialName)
+{
+    return m_materials[_materialName];
+}
+
 void Renderer::InitWindow()
 {
     glfwInit();
@@ -108,6 +113,11 @@ void Renderer::Cleanup() const
     for (const auto& sampler : m_textureSamplers | std::views::values)
     {
         delete sampler.get();
+    }
+
+    for (const auto& material : m_materials | std::views::values)
+    {
+        delete material.get();
     }
         
     vkDestroyRenderPass(m_device, m_renderPass, nullptr);

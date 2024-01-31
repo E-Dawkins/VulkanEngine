@@ -3,6 +3,7 @@
 #include <optional>
 #include <vector>
 
+class Material_Base;
 class Texture;
 class TextureSampler;
 class Mesh;
@@ -109,6 +110,10 @@ public:
     std::shared_ptr<Texture> GetTexture(const std::string& _textureName);
 
     std::shared_ptr<TextureSampler> GetTextureSampler(const std::shared_ptr<Texture> _texture);
+
+    template<class T = Material_Base, std::enable_if_t<std::is_base_of_v<Material_Base, T>>* = nullptr>
+    std::shared_ptr<T> LoadMaterial(const std::string& _vertShaderPath, const std::string& _fragShaderPath, const std::string& _materialName);
+    std::shared_ptr<Material_Base> GetMaterial(const std::string& _materialName);
     
 private:
     void InitWindow();
@@ -199,4 +204,13 @@ private:
     std::map<std::string, std::shared_ptr<Mesh>> m_meshes;
     std::map<std::string, std::shared_ptr<Texture>> m_textures;
     std::map<std::shared_ptr<Texture>, std::shared_ptr<TextureSampler>> m_textureSamplers;
+    std::map<std::string, std::shared_ptr<Material_Base>> m_materials;
 };
+
+template <class T, std::enable_if_t<std::is_base_of_v<Material_Base, T>>*>
+std::shared_ptr<T> Renderer::LoadMaterial(const std::string& _vertShaderPath, const std::string& _fragShaderPath, const std::string& _materialName)
+{
+    std::shared_ptr<T> material(new T(_vertShaderPath, _fragShaderPath, m_renderPass));
+    m_materials[_materialName] = material;
+    return material;
+}
