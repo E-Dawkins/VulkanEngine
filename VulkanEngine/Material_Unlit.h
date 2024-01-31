@@ -9,12 +9,11 @@ class Material_Unlit final : public Material_Base
 public:
     Material_Unlit(const std::string& _vertexShaderPath, const std::string& _fragmentShaderPath, VkRenderPass _renderPass)
         : Material_Base(_vertexShaderPath, _fragmentShaderPath, _renderPass) { }
-    ~Material_Unlit() override;
     
-    void SetTexture(Texture* _newTexture)
+    void SetTexture(const std::shared_ptr<Texture>& _newTexture)
     {
         m_texture = _newTexture;
-        m_textureSampler = new TextureSampler(m_texture);
+        m_textureSampler = Renderer::GetInstance()->GetTextureSampler(_newTexture);
     }
 
 private:
@@ -32,6 +31,6 @@ public:
 
 
 private:
-    Texture* m_texture = nullptr;
-    TextureSampler* m_textureSampler = nullptr;
+    std::shared_ptr<Texture> m_texture = nullptr;
+    std::shared_ptr<TextureSampler> m_textureSampler = nullptr;
 };

@@ -37,10 +37,8 @@ void Mesh::InitMesh(const std::string& _meshPath, const bool _logInitTime)
     }
 }
 
-void Mesh::DrawMesh(const VkCommandBuffer _commandBuffer, const Material_Base* _material) const
+void Mesh::DrawMesh(const VkCommandBuffer _commandBuffer) const
 {
-    _material->RenderMaterial(_commandBuffer);
-    
     const VkBuffer vertexBuffers[] = {m_vertexBuffer};
     constexpr VkDeviceSize offsets[] = {0};
     vkCmdBindVertexBuffers(_commandBuffer, 0, 1, vertexBuffers, offsets);

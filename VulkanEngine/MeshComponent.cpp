@@ -24,6 +24,7 @@ void MeshComponent::CleanupComponent()
 
 void MeshComponent::DrawMesh(const VkCommandBuffer _commandBuffer) const
 {
-    m_meshPtr->DrawMesh(_commandBuffer, m_material);
+    m_material->RenderMaterial(_commandBuffer);
+    m_meshPtr->DrawMesh(_commandBuffer);
 }
 

@@ -25,8 +25,17 @@ public:
     }
 
     /* Getters */
-    SceneComponent* GetRoot() const { return m_rootComponent; }
+    SceneComponent*& GetRoot() { return m_rootComponent; }
 
-protected:
+    /* Setters */
+    void SetRoot(SceneComponent* _newRoot)
+    {
+        // Copy the old transform across to the new root
+        const Transform t = m_rootComponent->transform;
+        m_rootComponent = _newRoot;
+        m_rootComponent->transform = t;
+    }
+
+private:
     SceneComponent* m_rootComponent = nullptr;
 };

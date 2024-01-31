@@ -11,6 +11,6 @@ public:
     void Tick(float _deltaSeconds) override;
 
 private:
-    MeshComponent* m_meshComp = nullptr;
+    MeshComponent* m_meshComponent = nullptr;
     SphereColliderComponent* m_sphereColl = nullptr;
 };

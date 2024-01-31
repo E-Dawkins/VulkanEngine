@@ -11,23 +11,23 @@ void GravityGameObject::BeginPlay()
     
     // Initialize sphere collider
     m_sphereColl = ObjectComponent::CreateComponent<SphereColliderComponent>("Gravity");
-    m_rootComponent = m_sphereColl;
+    SetRoot(m_sphereColl);
     
     m_sphereColl->SetRadius(0.35f);
     m_sphereColl->SetUseGravity(true);
     m_sphereColl->transform.SetWorldScale(glm::vec3(0.5f));
-    m_sphereColl->transform.SetWorldPosition(glm::vec3(0, 0.1f, 2.f));
     
     // Initialize mesh component
-    m_meshComp = ObjectComponent::CreateComponent<MeshComponent>("Mesh");
-    m_meshComp->AttachTo(m_sphereColl);
+    m_meshComponent = ObjectComponent::CreateComponent<MeshComponent>("Mesh");
+    m_meshComponent->AttachTo(m_sphereColl);
 
-    auto* material = new Material_Unlit("shaders/unlit.vert.spv", "shaders/unlit.frag.spv", Renderer::GetInstance()->GetRenderPass());
-    material->SetTexture(new Texture("textures/viking_room.png"));
+    m_meshComponent->SetMesh(Renderer::GetInstance()->GetMesh("house"));
+
+    const auto material = new Material_Unlit("shaders/unlit.vert.spv", "shaders/unlit.frag.spv", Renderer::GetInstance()->GetRenderPass());
+    material->SetTexture(Renderer::GetInstance()->GetTexture("house"));
     material->Init();
-
-    m_meshComp->SetMesh(Renderer::GetInstance()->GetMesh("house"));
-    m_meshComp->SetMaterial(material);
+    
+    m_meshComponent->SetMaterial(material);
 }
 
 void GravityGameObject::Tick(const float _deltaSeconds)

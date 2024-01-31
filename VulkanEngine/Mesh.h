@@ -1,7 +1,4 @@
 ﻿#pragma once
-#include "Transform.h"
-
-class Material_Base;
 
 class Mesh
 {
@@ -10,7 +7,7 @@ public:
     ~Mesh();
 
     void InitMesh(const std::string& _meshPath, bool _logInitTime = false);
-    void DrawMesh(VkCommandBuffer _commandBuffer, const Material_Base* _material) const;
+    void DrawMesh(VkCommandBuffer _commandBuffer) const;
 
 private:
     void LoadModel();

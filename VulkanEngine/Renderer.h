@@ -3,7 +3,8 @@
 #include <optional>
 #include <vector>
 
-class Material_Base;
+class Texture;
+class TextureSampler;
 class Mesh;
 
 const std::vector VALIDATION_LAYERS =
@@ -103,6 +104,11 @@ public:
 
     void LoadMesh(const std::string& _meshPath, const std::string& _meshName, bool _logLoadTime = false);
     std::shared_ptr<Mesh> GetMesh(const std::string& _meshName);
+
+    void LoadTexture(const std::string& _texturePath, const std::string& _textureName);
+    std::shared_ptr<Texture> GetTexture(const std::string& _textureName);
+
+    std::shared_ptr<TextureSampler> GetTextureSampler(const std::shared_ptr<Texture> _texture);
     
 private:
     void InitWindow();
@@ -191,4 +197,6 @@ private:
     std::vector<std::function<void(VkCommandBuffer)>> m_drawCalls{};
 
     std::map<std::string, std::shared_ptr<Mesh>> m_meshes;
+    std::map<std::string, std::shared_ptr<Texture>> m_textures;
+    std::map<std::shared_ptr<Texture>, std::shared_ptr<TextureSampler>> m_textureSamplers;
 };

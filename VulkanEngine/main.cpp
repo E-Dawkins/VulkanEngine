@@ -12,20 +12,29 @@ int main()
     // Load Meshes
     Renderer::GetInstance()->LoadMesh("models/viking_room.obj", "house", true);
 
-    const std::array<GameObject*, 3> gameObjects =
-    {
-        new TestGameObject(),
-        new TestGameObject(),
-        new GravityGameObject()
-    };
+    // Load Textures
+    Renderer::GetInstance()->LoadTexture("textures/viking_room.png", "house");
 
+    // Initialize Game Objects
+    int rows = 10, cols = 10;
+
+    std::vector<GameObject*> gameObjects;
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            gameObjects.push_back(new TestGameObject());
+            gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(i - (rows/2), j - (cols/2), 0));
+        }
+    }
+
+    gameObjects.push_back(new GravityGameObject());
+    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(-1.1f, -0.8f, 1.5f));
+    
     for (const auto object : gameObjects)
     {
         object->BeginPlay();
     }
-
-    // TODO - remove explicit position setting
-    gameObjects[1]->GetRoot()->transform.SetWorldPosition(glm::vec3(0, 1.65f, 0));
     
     auto lastTime = high_resolution_clock::now();
 

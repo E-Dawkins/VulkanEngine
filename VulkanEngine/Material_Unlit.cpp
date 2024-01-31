@@ -1,14 +1,7 @@
 ﻿#include "pch.h"
 #include "Material_Unlit.h"
 
-#include "Renderer.h"
 #include "TextureSampler.h"
-
-Material_Unlit::~Material_Unlit()
-{
-    delete m_textureSampler;
-    delete m_texture;
-}
 
 void Material_Unlit::RenderMaterial(VkCommandBuffer _commandBuffer) const
 {

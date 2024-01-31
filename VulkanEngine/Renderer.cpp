@@ -14,7 +14,10 @@
 #include <ranges>
 #include <set>
 
+#include "Material_Base.h"
 #include "Mesh.h"
+#include "Texture.h"
+#include "TextureSampler.h"
 
 void Renderer::Initialize(const int _width, const int _height, const int _maxFramesInFlight)
 {
@@ -36,6 +39,24 @@ void Renderer::LoadMesh(const std::string& _meshPath, const std::string& _meshNa
 std::shared_ptr<Mesh> Renderer::GetMesh(const std::string& _meshName)
 {
     return m_meshes[_meshName];
+}
+
+void Renderer::LoadTexture(const std::string& _texturePath, const std::string& _textureName)
+{
+    const std::shared_ptr<Texture> texture(new Texture(_texturePath));
+    m_textures[_textureName] = texture;
+
+    m_textureSamplers[texture] = std::shared_ptr<TextureSampler>(new TextureSampler(texture.get()));
+}
+
+std::shared_ptr<Texture> Renderer::GetTexture(const std::string& _textureName)
+{
+    return m_textures[_textureName];
+}
+
+std::shared_ptr<TextureSampler> Renderer::GetTextureSampler(const std::shared_ptr<Texture> _texture)
+{
+    return m_textureSamplers[_texture];
 }
 
 void Renderer::InitWindow()
@@ -74,9 +95,19 @@ void Renderer::Cleanup() const
     CleanupSwapChain();
 
     // Bitwise or '|' with std::views::values will loop over the values of the map
-    for (auto mesh : m_meshes | std::views::values)
+    for (const auto& mesh : m_meshes | std::views::values)
     {
         delete mesh.get();
+    }
+    
+    for (const auto& texture : m_textures | std::views::values)
+    {
+        delete texture.get();
+    }
+
+    for (const auto& sampler : m_textureSamplers | std::views::values)
+    {
+        delete sampler.get();
     }
         
     vkDestroyRenderPass(m_device, m_renderPass, nullptr);
@@ -844,8 +875,6 @@ void Renderer::RecordCommandBuffer(const VkCommandBuffer _commandBuffer, uint32_
     {
         call(_commandBuffer);
     }
-
-    // bool result = m_drawCalls.empty();
 
     vkCmdEndRenderPass(_commandBuffer);
     
