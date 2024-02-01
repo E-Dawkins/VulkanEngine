@@ -38,8 +38,8 @@ void PhysicsSolver::UnRegisterCollider(const ColliderComponent* _collider)
 
 void PhysicsSolver::Init()
 {
-    constexpr int tickRate = 120;
-    constexpr float targetDelta = 1.f / static_cast<float>(tickRate);
+    constexpr int targetTickRate = 120;
+    constexpr float targetDelta = 1.f / static_cast<float>(targetTickRate);
 
     while (Renderer::GetInstance()->IsRunning())
     {
@@ -71,16 +71,19 @@ void PhysicsSolver::UpdatePhysicsBodies(const float _deltaSeconds, const std::ar
     for (int i = static_cast<int>(m_colliderMap[_cellId].size()) - 1; i >= 0; i--)
     {
         auto collider = m_colliderMap[_cellId][i];
-        
-        if (!collider->m_kinematic)
-        {
-            if (collider->m_useGravity)
-            {
-                collider->m_velocity += g_gravity * _deltaSeconds;
-            }
 
-            collider->transform.SetWorldPosition(collider->transform.GetWorldPosition() + (collider->m_velocity * _deltaSeconds));
+        // If the collider can't move, never update its' position or cell id
+        if (collider->m_kinematic)
+        {
+            continue;
         }
+        
+        if (collider->m_useGravity)
+        {
+            collider->m_velocity += g_gravity * _deltaSeconds;
+        }
+
+        collider->transform.SetWorldPosition(collider->transform.GetWorldPosition() + (collider->m_velocity * _deltaSeconds));
         
         auto newCellId = GetCellId(collider);
 
