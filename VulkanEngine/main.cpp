@@ -23,7 +23,9 @@ int main()
     material->Init();
 
     // Initialize Game Objects
-    int rows = 100, cols = 100;
+    int rows = 50, cols = 50;
+
+    std::cout << "\n\tGAMEOBJECT COUNT => " << rows * cols << "\n" << std::endl;
 
     std::vector<GameObject*> gameObjects;
     for (int i = 0; i < rows; i++)
@@ -34,9 +36,9 @@ int main()
             gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(i - (rows/2), j - (cols/2), 0));
         }
     }
-
+    
     gameObjects.push_back(new GravityGameObject());
-    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(-1.1f, -0.8f, 1.5f));
+    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(-1.1f, -0.8f, 1.f));
     
     for (const auto object : gameObjects)
     {
@@ -69,7 +71,7 @@ int main()
             // Drawing will happen at the end of the frame
             glfwPollEvents();
             Renderer::GetInstance()->DrawFrame();
-
+            
             lastTime = currentTime;
         }
         catch (const std::exception& e)

@@ -27,6 +27,15 @@ void ObjectComponent::RemoveFrom(ObjectComponent* _parentComp) const
     }
 }
 
+void ObjectComponent::BeginComponent()
+{
+    // Begin all attached components
+    for (ObjectComponent* comp : m_attachedComponents)
+    {
+        comp->BeginComponent();
+    }
+}
+
 void ObjectComponent::TickComponent(const float _deltaSeconds)
 {
     // Tick all attached components

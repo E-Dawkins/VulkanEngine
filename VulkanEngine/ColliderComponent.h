@@ -6,7 +6,7 @@
 class ColliderComponent : public SceneComponent
 {
 public:
-    ColliderComponent();
+    void BeginComponent() override;
     
     void ResolveCollision(ColliderComponent* _otherCollider);
 

@@ -7,6 +7,7 @@ class MeshComponent;
 class TestGameObject : public GameObject
 {
 public:
+    TestGameObject();
     void BeginPlay() override;
     void Tick(float _deltaSeconds) override;
 

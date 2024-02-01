@@ -7,6 +7,8 @@ class MeshComponent;
 class GravityGameObject : public GameObject
 {
 public:
+    GravityGameObject();
+    
     void BeginPlay() override;
     void Tick(float _deltaSeconds) override;
 

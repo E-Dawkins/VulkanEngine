@@ -1,15 +1,12 @@
 ﻿#include "pch.h"
 #include "TestGameObject.h"
 
-#include "Material_Unlit.h"
 #include "MeshComponent.h"
 #include "Renderer.h"
 #include "SphereColliderComponent.h"
 
-void TestGameObject::BeginPlay()
+TestGameObject::TestGameObject()
 {
-    GameObject::BeginPlay();
-    
     // Initialize sphere collider
     m_sphereColl = ObjectComponent::CreateComponent<SphereColliderComponent>("Test");
     SetRoot(m_sphereColl);
@@ -24,6 +21,13 @@ void TestGameObject::BeginPlay()
 
     m_meshComponent->SetMesh(Renderer::GetInstance()->GetMesh("house"));
     m_meshComponent->SetMaterial(Renderer::GetInstance()->GetMaterial("house"));
+}
+
+void TestGameObject::BeginPlay()
+{
+    GameObject::BeginPlay();
+
+    
 }
 
 void TestGameObject::Tick(const float _deltaSeconds)

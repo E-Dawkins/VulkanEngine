@@ -14,7 +14,10 @@ public:
         delete m_rootComponent;
     }
     
-    virtual void BeginPlay() {}
+    virtual void BeginPlay()
+    {
+        m_rootComponent->BeginComponent();
+    }
     virtual void Tick(const float _deltaSeconds)
     {
         m_rootComponent->TickComponent(_deltaSeconds);

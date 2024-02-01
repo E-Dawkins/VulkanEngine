@@ -3,8 +3,10 @@
 
 #include "PhysicsSolver.h"
 
-ColliderComponent::ColliderComponent()
+void ColliderComponent::BeginComponent()
 {
+    SceneComponent::BeginComponent();
+
     PhysicsSolver::GetInstance()->RegisterCollider(this);
 }
 

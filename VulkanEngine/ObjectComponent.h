@@ -10,7 +10,8 @@ public:
 
     virtual void AttachTo(ObjectComponent* _parentComp);
     void RemoveFrom(ObjectComponent* _parentComp) const;
-    
+
+    virtual void BeginComponent();
     virtual void TickComponent(float _deltaSeconds);
     virtual void CleanupComponent();
     
