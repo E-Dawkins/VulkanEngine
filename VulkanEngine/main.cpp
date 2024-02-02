@@ -23,7 +23,8 @@ int main()
     material->Init();
 
     // Initialize Game Objects
-    int rows = 50, cols = 50;
+    constexpr int rows = 10;
+    constexpr int cols = 10;
 
     std::cout << "\n\tGAMEOBJECT COUNT => " << rows * cols << "\n" << std::endl;
 

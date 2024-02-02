@@ -17,6 +17,7 @@ void PhysicsSolver::RegisterCollider(ColliderComponent* _collider)
     if (itr == end) // collider is not already registered
     {
         m_colliderMap[cellId].push_back(_collider);
+        m_colliderCount++;
     }
 }
 
@@ -33,6 +34,7 @@ void PhysicsSolver::UnRegisterCollider(const ColliderComponent* _collider)
     if (itr != end) // collider is registered
     {
         m_colliderMap[cellId].erase(itr);
+        m_colliderCount--;
     }
 }
 
@@ -46,14 +48,13 @@ void PhysicsSolver::Init()
         auto frameStart = steady_clock::now();
         
         // force wait until end of 'frame', i.e. 1 / tickRate
-        auto workTime = steady_clock::now() - frameStart;
+        float delta;
 
-        while (duration<float>(workTime).count() < targetDelta)
+        do
         {
-            workTime = steady_clock::now() - frameStart;
+            delta = duration<float>(steady_clock::now() - frameStart).count();
         }
-
-        const float delta = duration<float>(workTime).count();
+        while (delta < targetDelta);
 
         for (const auto cell : m_colliderMap | std::views::keys)
         {
@@ -108,6 +109,11 @@ void PhysicsSolver::CheckForCollisions(const std::array<int, 3> _cellId)
 {
     for (const auto collider1 : m_colliderMap[_cellId])
     {
+        if (collider1->m_kinematic) // if collider is static, don't check collision against other colliders
+        {
+            continue;
+        }
+        
         for (const auto collider2 : m_colliderMap[_cellId])
         {
             if (collider1 != collider2) // don't check collision against itself
