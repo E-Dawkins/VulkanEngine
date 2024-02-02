@@ -13,15 +13,21 @@ int main()
 
     // Load Meshes
     Renderer::GetInstance()->LoadMesh("models/viking_room.obj", "house", true);
+    Renderer::GetInstance()->LoadMesh("models/sphere.obj", "sphere", true);
 
     // Load Textures
     Renderer::GetInstance()->LoadTexture("textures/viking_room.png", "house");
 
     // Load Materials
-    const auto material = Renderer::GetInstance()->LoadMaterial<Material_Unlit>("shaders/unlit.vert.spv", "shaders/unlit.frag.spv", "house");
-    material->SetTexture(Renderer::GetInstance()->GetTexture("house"));
-    material->Init();
+    const auto houseMat = Renderer::GetInstance()->LoadMaterial<Material_Unlit>("shaders/unlit.vert.spv", "shaders/unlit.frag.spv", "house");
+    houseMat->SetTexture(Renderer::GetInstance()->GetTexture("house"));
+    houseMat->Init();
 
+    const auto colliderMat = Renderer::GetInstance()->LoadMaterial("shaders/color.vert.spv", "shaders/color.frag.spv", "collider");
+    colliderMat->pushConstants.color = {0, 1, 0, 1};
+    colliderMat->SetFillMode(VK_POLYGON_MODE_LINE);
+    colliderMat->Init();
+    
     // Initialize Game Objects
     constexpr int rows = 10;
     constexpr int cols = 10;
@@ -39,7 +45,7 @@ int main()
     }
     
     gameObjects.push_back(new GravityGameObject());
-    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(-1.1f, -0.8f, 1.f));
+    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(-1.2f, -0.8f, 1.f));
     
     for (const auto object : gameObjects)
     {

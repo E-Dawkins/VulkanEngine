@@ -4,6 +4,8 @@
 SphereColliderComponent::SphereColliderComponent()
 {
     m_type = CT_SPHERE;
+
+    m_visualizedMesh = Renderer::GetInstance()->GetMesh("sphere");
 }
 
 bool SphereColliderComponent::SphereCollision(ColliderComponent* _otherCollider, float& _collisionVelocity, glm::vec3& _collisionPoint)

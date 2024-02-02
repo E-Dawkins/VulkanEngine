@@ -144,7 +144,6 @@ void Material_Base::CreateDescriptorSetLayout()
     bindings.back().descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     bindings.back().descriptorCount = 1;
     bindings.back().stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    bindings.back().pImmutableSamplers = nullptr; // optional
 
     // Per material bindings (i.e. texture samplers, other uniforms, etc.)
     AppendSetLayoutBindings(bindings);
@@ -228,23 +227,17 @@ void Material_Base::CreateGraphicsPipeline()
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.depthClampEnable = VK_FALSE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    rasterizer.polygonMode = VK_POLYGON_MODE_FILL; // fill each polygon
+    rasterizer.polygonMode = m_fillMode;
     rasterizer.lineWidth = 1.f;
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
     rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
-    rasterizer.depthBiasConstantFactor = 0.f; // optional
-    rasterizer.depthBiasClamp = 0.f; // optional
-    rasterizer.depthBiasSlopeFactor = 0.f; // optional
 
     VkPipelineMultisampleStateCreateInfo multisampling{};
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisampling.sampleShadingEnable = VK_TRUE; // enable sample shading in the pipeline
     multisampling.minSampleShading = .2f; // min fraction for sample shading, closer to one is smoother
     multisampling.rasterizationSamples = Renderer::GetInstance()->GetMsaaSampleCount();
-    multisampling.pSampleMask = nullptr; // optional
-    multisampling.alphaToCoverageEnable = VK_FALSE; // optional
-    multisampling.alphaToOneEnable = VK_FALSE; // optional
 
     VkPipelineDepthStencilStateCreateInfo depthStencil{};
     depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -252,11 +245,7 @@ void Material_Base::CreateGraphicsPipeline()
     depthStencil.depthWriteEnable = VK_TRUE;
     depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
     depthStencil.depthBoundsTestEnable = VK_FALSE;
-    depthStencil.minDepthBounds = 0.f; // optional
-    depthStencil.maxDepthBounds = 1.f; // optional
     depthStencil.stencilTestEnable = VK_FALSE;
-    depthStencil.front = {}; // optional
-    depthStencil.back = {}; // optional
 
     VkPipelineColorBlendAttachmentState colorBlendAttachment{};
     colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
@@ -272,13 +261,8 @@ void Material_Base::CreateGraphicsPipeline()
     VkPipelineColorBlendStateCreateInfo colorBlending{};
     colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     colorBlending.logicOpEnable = VK_FALSE;
-    colorBlending.logicOp = VK_LOGIC_OP_COPY; // optional
     colorBlending.attachmentCount = 1;
     colorBlending.pAttachments = &colorBlendAttachment;
-    colorBlending.blendConstants[0] = 0.f; // optional
-    colorBlending.blendConstants[1] = 0.f; // optional
-    colorBlending.blendConstants[2] = 0.f; // optional
-    colorBlending.blendConstants[3] = 0.f; // optional
     
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -307,8 +291,6 @@ void Material_Base::CreateGraphicsPipeline()
     pipelineInfo.layout = m_pipelineLayout;
     pipelineInfo.renderPass = m_renderPass;
     pipelineInfo.subpass = 0;
-    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // optional
-    pipelineInfo.basePipelineIndex = -1; // optional
 
     if (vkCreateGraphicsPipelines(Renderer::GetInstance()->GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline) != VK_SUCCESS)
     {

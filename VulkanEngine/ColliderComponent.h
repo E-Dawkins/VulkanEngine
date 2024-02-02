@@ -43,4 +43,6 @@ protected:
     bool m_kinematic = false;
     
     std::vector<ColliderComponent*> m_previousCollisions;
+
+    std::shared_ptr<Mesh> m_visualizedMesh;
 };

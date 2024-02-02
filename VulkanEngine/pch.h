@@ -27,5 +27,7 @@ using namespace std::chrono;
 #include "StringConverter.h"
 #include "Renderer.h"
 
+/* Global Constants */
 inline long double g_timeSinceAppStart = 0.f;
 inline glm::vec3 g_gravity = glm::vec3(0, 0, -9.8f);
+inline bool g_visualizeColliders = true;

@@ -9,6 +9,9 @@ public:
     void Init();
     virtual void RenderMaterial(VkCommandBuffer _commandBuffer) const;
     void UpdateMaterial();
+
+    /* Setters */
+    void SetFillMode(const VkPolygonMode _fillMode) { m_fillMode = _fillMode; }
     
 private:
     void LoadShaderModules();
@@ -45,10 +48,6 @@ protected:
 
     VkShaderModule m_vertShaderModule{};
     VkShaderModule m_fragShaderModule{};
-
-    VkBuffer m_dynamicBuffer{};
-    VkDeviceMemory m_dynamicBufferMemory{};
-    void* m_dynamicBufferMapped{};
     
     VkBuffer m_uniformBuffer{};
     VkDeviceMemory m_uniformBufferMemory{};
@@ -58,9 +57,11 @@ protected:
     VkDescriptorSetLayout m_descriptorSetLayout{};
     VkDescriptorSet m_descriptorSet{};
 
-    VkPushConstantRange m_pushConstantRange{};
-
     VkPipelineLayout m_pipelineLayout{};
     VkPipeline m_graphicsPipeline{};
     VkRenderPass m_renderPass;
+
+    // User-defined material values
+    VkPushConstantRange m_pushConstantRange{};
+    VkPolygonMode m_fillMode = VK_POLYGON_MODE_FILL;  // default => fill each face
 };

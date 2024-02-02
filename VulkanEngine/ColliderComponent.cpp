@@ -1,6 +1,8 @@
 ﻿#include "pch.h"
 #include "ColliderComponent.h"
 
+#include "Material_Base.h"
+#include "Mesh.h"
 #include "PhysicsSolver.h"
 
 void ColliderComponent::BeginComponent()
@@ -8,6 +10,22 @@ void ColliderComponent::BeginComponent()
     SceneComponent::BeginComponent();
 
     PhysicsSolver::GetInstance()->RegisterCollider(this);
+
+    // Set-up visualized mesh if it has been set
+    if (m_visualizedMesh)
+    {
+        Renderer::GetInstance()->AddDrawCall([&] (const VkCommandBuffer _buffer)
+        {
+            if (g_visualizeColliders)
+            {
+                const auto material = Renderer::GetInstance()->GetMaterial("collider");
+                material->pushConstants.model = transform.GetWorldMatrix();
+                material->UpdateMaterial();
+                material->RenderMaterial(_buffer);
+                m_visualizedMesh->DrawMesh(_buffer);
+            }
+        });
+    }
 }
 
 void ColliderComponent::ResolveCollision(ColliderComponent* _otherCollider)
