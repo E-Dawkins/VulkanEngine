@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include <map>
-#include <glm/common.hpp>
 
 #include "ColliderComponent.h"
 #include "SceneComponent.h"
@@ -22,6 +21,7 @@ public:
     void SetVelocity(const glm::vec3 _velocity)     { m_velocity = _velocity; }
     void SetKinematic(const bool _kinematic)        { m_kinematic = _kinematic; }
     void SetMass(const float _mass)                 { m_mass = _mass; }
+    void SetElasticity(const float _elasticity)    { m_elasticity = _elasticity; }
 
     /* Getters */
     float GetMass() const           { return m_kinematic ? FLT_MAX : m_mass; }
@@ -50,6 +50,7 @@ protected:
     glm::vec3 m_velocity = glm::vec3(0);
 
     float m_mass = 1.f;
+    float m_elasticity = 1.f;
 
     bool m_useGravity = false;
     bool m_kinematic = false;

@@ -93,11 +93,12 @@ void ColliderComponent::ResolveCollision(ColliderComponent* _other, glm::vec3 _c
     const glm::vec3 normal = normalize(_ptNormal);
 
     const glm::vec3 netVelocity = m_velocity + _other->m_velocity;
-
-    const glm::vec3 force = normal * length(netVelocity);
+    const float averageElasticity = (m_elasticity + _other->m_elasticity) * 0.5f;
     
-    m_velocity -= force / GetMass();
-    _other->m_velocity += force / _other->GetMass();
+    const glm::vec3 force = normal * length(netVelocity) * averageElasticity;
+    
+    m_velocity = (m_velocity - force / GetMass()) * averageElasticity;
+    _other->m_velocity = (_other->m_velocity + force / _other->GetMass()) * averageElasticity;
     
     // Colliders are penetrating, so apply contact forces to separate the two colliders
     if (_penetration > 0)

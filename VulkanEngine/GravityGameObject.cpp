@@ -12,6 +12,7 @@ GravityGameObject::GravityGameObject()
     
     m_sphereColl->SetRadius(0.25f);
     m_sphereColl->SetVelocity(glm::vec3(0, 0.3f, -2));
+    m_sphereColl->SetElasticity(0.5f);
     
     // Initialize mesh component
     m_meshComponent = ObjectComponent::CreateComponent<MeshComponent>("Mesh");

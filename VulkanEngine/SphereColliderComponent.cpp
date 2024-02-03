@@ -20,14 +20,14 @@ bool SphereColliderComponent::SphereCollision(ColliderComponent* _otherCollider,
     }
     
     // Collision point is the edge point of the sphere
-    glm::vec3 direction = otherSphere->transform.GetWorldPosition() - transform.GetWorldPosition();
-    _collisionPoint = direction * m_radius;
+    const glm::vec3 direction = otherSphere->transform.GetWorldPosition() - transform.GetWorldPosition();
+    _collisionPoint = transform.GetWorldPosition() + direction * m_radius;
 
     // Collision normal is just the direction to the contact point
     _collisionNormal = _collisionPoint - transform.GetWorldPosition();
 
     // Collision penetration is the radius - distance to collision point
-    _penetration = length(transform.GetWorldScale()) - distance(transform.GetWorldPosition(), _collisionPoint);
+    _penetration = abs(m_radius - distance(transform.GetWorldPosition(), _collisionPoint));
     
     return true;
 }
