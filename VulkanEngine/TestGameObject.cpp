@@ -12,7 +12,8 @@ TestGameObject::TestGameObject()
     SetRoot(m_sphereColl);
     
     m_sphereColl->SetRadius(0.5f);
-    m_sphereColl->SetKinematic(true);
+    m_sphereColl->SetMass(10.f);
+    // m_sphereColl->SetKinematic(true);
     
     // Initialize mesh component
     m_meshComponent = ObjectComponent::CreateComponent<MeshComponent>("Mesh");

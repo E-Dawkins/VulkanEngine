@@ -73,18 +73,7 @@ void PhysicsSolver::UpdatePhysicsBodies(const float _deltaSeconds, const std::ar
     {
         auto collider = m_colliderMap[_cellId][i];
 
-        // If the collider can't move, never update its' position or cell id
-        if (collider->m_kinematic)
-        {
-            continue;
-        }
-        
-        if (collider->m_useGravity)
-        {
-            collider->m_velocity += g_gravity * _deltaSeconds;
-        }
-
-        collider->transform.SetWorldPosition(collider->transform.GetWorldPosition() + (collider->m_velocity * _deltaSeconds));
+        collider->UpdateCollider(_deltaSeconds);
         
         auto newCellId = GetCellId(collider);
 
@@ -109,16 +98,14 @@ void PhysicsSolver::CheckForCollisions(const std::array<int, 3> _cellId)
 {
     for (const auto collider1 : m_colliderMap[_cellId])
     {
-        if (collider1->m_kinematic) // if collider is static, don't check collision against other colliders
+        if (!collider1->m_kinematic) // if collider is static, don't check collision against other colliders
         {
-            continue;
-        }
-        
-        for (const auto collider2 : m_colliderMap[_cellId])
-        {
-            if (collider1 != collider2) // don't check collision against itself
+            for (const auto collider2 : m_colliderMap[_cellId])
             {
-                collider1->ResolveCollision(collider2);
+                if (collider1 != collider2) // don't check collision against itself
+                {
+                    collider1->CheckForCollision(collider2);
+                }
             }
         }
 

@@ -29,23 +29,13 @@ int main()
     colliderMat->Init();
     
     // Initialize Game Objects
-    constexpr int rows = 10;
-    constexpr int cols = 10;
-
-    std::cout << "\n\tGAMEOBJECT COUNT => " << rows * cols << "\n" << std::endl;
 
     std::vector<GameObject*> gameObjects;
-    for (int i = 0; i < rows; i++)
-    {
-        for (int j = 0; j < cols; j++)
-        {
-            gameObjects.push_back(new TestGameObject());
-            gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(i - (rows/2), j - (cols/2), 0));
-        }
-    }
     
     gameObjects.push_back(new GravityGameObject());
-    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(-1.2f, -0.8f, 1.f));
+    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(0, 0, 3));
+
+    gameObjects.push_back(new TestGameObject());
     
     for (const auto object : gameObjects)
     {

@@ -8,22 +8,26 @@ SphereColliderComponent::SphereColliderComponent()
     m_visualizedMesh = Renderer::GetInstance()->GetMesh("sphere");
 }
 
-bool SphereColliderComponent::SphereCollision(ColliderComponent* _otherCollider, float& _collisionVelocity, glm::vec3& _collisionPoint)
+bool SphereColliderComponent::SphereCollision(ColliderComponent* _otherCollider, glm::vec3& _collisionPoint, glm::vec3& _collisionNormal, float& _penetration)
 {
     const auto otherSphere = dynamic_cast<SphereColliderComponent*>(_otherCollider);
-    const float distance = glm::distance(transform.GetWorldPosition(), otherSphere->transform.GetWorldPosition());
-
+    const float dist = distance(transform.GetWorldPosition(), otherSphere->transform.GetWorldPosition());
+    
     // Not colliding, return false
-    if (distance > m_radius + otherSphere->m_radius)
+    if (dist > m_radius + otherSphere->m_radius)
     {
         return false;
     }
     
-    // The collision velocity is the total net velocity in the system
-    _collisionVelocity = length(m_velocity + otherSphere->m_velocity);
+    // Collision point is the edge point of the sphere
+    glm::vec3 direction = otherSphere->transform.GetWorldPosition() - transform.GetWorldPosition();
+    _collisionPoint = direction * m_radius;
 
-    // Collision point is the mid point between both colliders
-    _collisionPoint = (transform.GetWorldPosition() + otherSphere->transform.GetWorldPosition()) * 0.5f;
+    // Collision normal is just the direction to the contact point
+    _collisionNormal = _collisionPoint - transform.GetWorldPosition();
+
+    // Collision penetration is the radius - distance to collision point
+    _penetration = length(transform.GetWorldScale()) - distance(transform.GetWorldPosition(), _collisionPoint);
     
     return true;
 }

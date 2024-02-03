@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <map>
+#include <glm/common.hpp>
 
+#include "ColliderComponent.h"
 #include "SceneComponent.h"
 
 class ColliderComponent : public SceneComponent
@@ -8,17 +10,25 @@ class ColliderComponent : public SceneComponent
 public:
     void BeginComponent() override;
     
-    void ResolveCollision(ColliderComponent* _otherCollider);
+    void CheckForCollision(ColliderComponent* _otherCollider);
+    void UpdateCollider(float _deltaSeconds);
+    void ClearPreviousCollisions() { m_previousCollisions.clear(); }
 
     /* Collision Resolvers */
-    virtual bool SphereCollision(ColliderComponent* _otherCollider,float& _collisionVelocity, glm::vec3& _collisionPoint);
+    virtual bool SphereCollision(ColliderComponent* _otherCollider, glm::vec3& _collisionPoint, glm::vec3& _collisionNormal, float& _penetration);
 
     /* Setters */
-    void SetUseGravity(const bool _useGravity) { m_useGravity = _useGravity; }
-    void SetVelocity(const glm::vec3 _velocity) { m_velocity = _velocity; }
-    void SetKinematic(const bool _kinematic) { m_kinematic = _kinematic; }
+    void SetUseGravity(const bool _useGravity)      { m_useGravity = _useGravity; }
+    void SetVelocity(const glm::vec3 _velocity)     { m_velocity = _velocity; }
+    void SetKinematic(const bool _kinematic)        { m_kinematic = _kinematic; }
+    void SetMass(const float _mass)                 { m_mass = _mass; }
 
-    void ClearPreviousCollisions() { m_previousCollisions.clear(); }
+    /* Getters */
+    float GetMass() const           { return m_kinematic ? FLT_MAX : m_mass; }
+
+protected:
+    void ResolveCollision(ColliderComponent* _other, glm::vec3 _contactPt, glm::vec3 _ptNormal, float _penetration);
+    void ApplyContactForces(::ColliderComponent* _other, glm::vec3 _ptNormal, float _penetration);
     
 protected:
     friend class PhysicsSolver;
@@ -36,8 +46,10 @@ protected:
     };
 
     ColliderType m_type = CT_UNKNOWN;
-
+    
     glm::vec3 m_velocity = glm::vec3(0);
+
+    float m_mass = 1.f;
 
     bool m_useGravity = false;
     bool m_kinematic = false;

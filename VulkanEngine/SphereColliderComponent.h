@@ -1,13 +1,15 @@
 ﻿#pragma once
+
 #include "ColliderComponent.h"
+#include "SphereColliderComponent.h"
 
 class SphereColliderComponent : public ColliderComponent
 {
 public:
     SphereColliderComponent();
     
-    bool SphereCollision(ColliderComponent* _otherCollider, float& _collisionVelocity, glm::vec3& _collisionPoint) override;
-
+    bool SphereCollision(ColliderComponent* _otherCollider, glm::vec3& _collisionPoint, glm::vec3& _collisionNormal, float& _penetration) override;
+    
     /* Setters */
     void SetRadius(const float _radius)
     {
