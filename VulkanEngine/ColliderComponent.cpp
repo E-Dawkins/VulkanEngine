@@ -67,11 +67,11 @@ void ColliderComponent::UpdateCollider(float _deltaSeconds)
         
     if (m_useGravity)
     {
-        m_velocity += g_gravity * _deltaSeconds;
+        ApplyForce(g_gravity, glm::vec3(0));
     }
-
-    // Update the collider position
+    
     transform.SetWorldPosition(transform.GetWorldPosition() + (m_velocity * _deltaSeconds));
+    transform.SetWorldRotation(transform.GetWorldRotation() * glm::quat(m_angularVelocity));
 }
 
 bool ColliderComponent::SphereCollision(ColliderComponent* _otherCollider, glm::vec3& _collisionPoint,
@@ -92,19 +92,34 @@ void ColliderComponent::ResolveCollision(ColliderComponent* _other, glm::vec3 _c
     // Ensure normal is actually normalized
     const glm::vec3 normal = normalize(_ptNormal);
 
-    const glm::vec3 netVelocity = m_velocity + _other->m_velocity;
-    const float averageElasticity = (m_elasticity + _other->m_elasticity) * 0.5f;
-    
-    const glm::vec3 force = normal * length(netVelocity) * averageElasticity;
-    
-    m_velocity = (m_velocity - force / GetMass()) * averageElasticity;
-    _other->m_velocity = (_other->m_velocity + force / _other->GetMass()) * averageElasticity;
+    float e = (m_elasticity + _other->m_elasticity) * 0.5f;
+
+    glm::vec3 rA = _contactPt - transform.GetWorldPosition();
+    glm::vec3 rB = _contactPt - _other->transform.GetWorldPosition();
+    glm::vec3 rACrossN = cross(rA, normal);
+    glm::vec3 rBCrossN = cross(rB, normal);
+    glm::mat3 invTensorA = inverse(GetMoment());
+    glm::mat3 invTensorB = inverse(_other->GetMoment());
+
+    float j = -(1.f + e) * dot(m_velocity - _other->m_velocity, normal) + dot(rACrossN, m_angularVelocity) - dot(rBCrossN, _other->m_angularVelocity) /
+        ((1.f / GetMass()) + (1.f / _other->GetMass()) + dot(rACrossN, (invTensorA * rACrossN)) + dot(rBCrossN, invTensorB * rBCrossN));
+
+    glm::vec3 force = j * normal;
+
+    ApplyForce(force, _contactPt - transform.GetWorldPosition());
+    _other->ApplyForce(-force, _contactPt - _other->transform.GetWorldPosition());
     
     // Colliders are penetrating, so apply contact forces to separate the two colliders
     if (_penetration > 0)
     {
         ApplyContactForces(_other, _ptNormal, _penetration);
     }
+}
+
+void ColliderComponent::ApplyForce(glm::vec3 _force, glm::vec3 _pos)
+{
+    m_velocity += _force / GetMass();
+    m_angularVelocity += degrees(inverse(GetMoment()) * cross(_force, _pos));
 }
 
 void ColliderComponent::ApplyContactForces(ColliderComponent* _other, glm::vec3 _ptNormal, float _penetration)

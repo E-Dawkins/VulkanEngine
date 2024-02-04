@@ -24,11 +24,13 @@ public:
     void SetElasticity(const float _elasticity)    { m_elasticity = _elasticity; }
 
     /* Getters */
-    float GetMass() const           { return m_kinematic ? FLT_MAX : m_mass; }
+    float GetMass() const                   { return m_kinematic ? FLT_MAX : m_mass; }
+    virtual glm::mat3 GetMoment() const     { return glm::mat3(1); }
 
 protected:
     void ResolveCollision(ColliderComponent* _other, glm::vec3 _contactPt, glm::vec3 _ptNormal, float _penetration);
-    void ApplyContactForces(::ColliderComponent* _other, glm::vec3 _ptNormal, float _penetration);
+    void ApplyForce(glm::vec3 _force, glm::vec3 _pos);
+    void ApplyContactForces(ColliderComponent* _other, glm::vec3 _ptNormal, float _penetration);
     
 protected:
     friend class PhysicsSolver;
@@ -48,6 +50,7 @@ protected:
     ColliderType m_type = CT_UNKNOWN;
     
     glm::vec3 m_velocity = glm::vec3(0);
+    glm::vec3 m_angularVelocity = glm::vec3(0);
 
     float m_mass = 1.f;
     float m_elasticity = 1.f;

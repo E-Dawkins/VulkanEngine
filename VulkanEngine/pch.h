@@ -29,7 +29,7 @@ using namespace std::chrono;
 
 /* Global Constants */
 inline long double g_timeSinceAppStart = 0.f;
-inline glm::vec3 g_gravity = glm::vec3(0, 0, -9.8f);
+inline glm::vec3 g_gravity = glm::vec3(0, 0, -0.098f);
 inline bool g_visualizeColliders = false;
 
 inline glm::vec3 g_rightVector = glm::vec3(1, 0, 0);

@@ -33,7 +33,7 @@ int main()
     std::vector<GameObject*> gameObjects;
     
     gameObjects.push_back(new GravityGameObject());
-    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(0, 0, 3));
+    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(0, 0.1f, 1.5f));
 
     gameObjects.push_back(new TestGameObject());
     
