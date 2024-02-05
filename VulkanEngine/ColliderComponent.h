@@ -29,7 +29,6 @@ public:
 
 protected:
     void ResolveCollision(ColliderComponent* _other, glm::vec3 _contactPt, glm::vec3 _ptNormal, float _penetration);
-    void ApplyForce(glm::vec3 _force, glm::vec3 _pos);
     void ApplyContactForces(ColliderComponent* _other, glm::vec3 _ptNormal, float _penetration);
     
 protected:

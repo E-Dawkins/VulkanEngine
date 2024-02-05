@@ -58,20 +58,26 @@ void ColliderComponent::CheckForCollision(ColliderComponent* _otherCollider)
 
 void ColliderComponent::UpdateCollider(float _deltaSeconds)
 {
-    // If the collider can't move, never update its' position or cell id
+    // Only update the colliders' position / rotation if it is not static
     if (m_kinematic)
     {
         m_velocity = glm::vec3(0);
+        m_angularVelocity = glm::vec3(0);
         return;
     }
         
     if (m_useGravity)
     {
-        ApplyForce(g_gravity, glm::vec3(0));
+        m_velocity += g_gravity;
     }
     
     transform.SetWorldPosition(transform.GetWorldPosition() + (m_velocity * _deltaSeconds));
-    transform.SetWorldRotation(transform.GetWorldRotation() * glm::quat(m_angularVelocity));
+
+    const glm::quat qOld = transform.GetWorldRotation();
+    const glm::quat w = glm::quat(0, m_angularVelocity);
+    // derived formula to apply angular velocity to a known quaternion rotation
+    const glm::quat qNew = qOld + (_deltaSeconds / 2.f) * w * qOld;
+    transform.SetWorldRotation(normalize(qNew));
 }
 
 bool ColliderComponent::SphereCollision(ColliderComponent* _otherCollider, glm::vec3& _collisionPoint,
@@ -92,8 +98,10 @@ void ColliderComponent::ResolveCollision(ColliderComponent* _other, glm::vec3 _c
     // Ensure normal is actually normalized
     const glm::vec3 normal = normalize(_ptNormal);
 
-    float e = (m_elasticity + _other->m_elasticity) * 0.5f;
+    // Combined elasticity of the collision
+    float e = m_elasticity * _other->m_elasticity;
 
+    // These are just to reduce the size of the mammoth equation below
     glm::vec3 rA = _contactPt - transform.GetWorldPosition();
     glm::vec3 rB = _contactPt - _other->transform.GetWorldPosition();
     glm::vec3 rACrossN = cross(rA, normal);
@@ -101,30 +109,36 @@ void ColliderComponent::ResolveCollision(ColliderComponent* _other, glm::vec3 _c
     glm::mat3 invTensorA = inverse(GetMoment());
     glm::mat3 invTensorB = inverse(_other->GetMoment());
 
+    /* General Equation for the Impulse Magnitude Along a Collision Normal */
+    // Mammoth of an equation, but this gets the impulse magnitude along the collision normal...
     float j = -(1.f + e) * dot(m_velocity - _other->m_velocity, normal) + dot(rACrossN, m_angularVelocity) - dot(rBCrossN, _other->m_angularVelocity) /
         ((1.f / GetMass()) + (1.f / _other->GetMass()) + dot(rACrossN, (invTensorA * rACrossN)) + dot(rBCrossN, invTensorB * rBCrossN));
 
+    // ...so to get the actual force, we multiply the previously calculated magnitude by the collision normal.
     glm::vec3 force = j * normal;
 
-    ApplyForce(force, _contactPt - transform.GetWorldPosition());
-    _other->ApplyForce(-force, _contactPt - _other->transform.GetWorldPosition());
+    // Delta (change) in velocity, and the extra tangential velocity created by 
+    // the fact that the point is rotating around the object's centre. (I think?)
+    glm::vec<3, float> deltaVel = _other->m_velocity - m_velocity;
+    glm::vec3 tangent = normalize(deltaVel - normal * dot(deltaVel, normal));
+
+    // Apply the correct linear and angular velocities
+    m_velocity += force / GetMass();
+    _other->m_velocity -= force / GetMass();
     
-    // Colliders are penetrating, so apply contact forces to separate the two colliders
+    m_angularVelocity += inverse(GetMoment()) * cross(rA, tangent * force);
+    _other->m_angularVelocity -= inverse(_other->GetMoment()) * cross(rB, tangent * force);
+    
+    // Colliders are penetrating, so apply contact forces to separate them
     if (_penetration > 0)
     {
         ApplyContactForces(_other, _ptNormal, _penetration);
     }
 }
 
-void ColliderComponent::ApplyForce(glm::vec3 _force, glm::vec3 _pos)
-{
-    m_velocity += _force / GetMass();
-    m_angularVelocity += degrees(inverse(GetMoment()) * cross(_force, _pos));
-}
-
 void ColliderComponent::ApplyContactForces(ColliderComponent* _other, glm::vec3 _ptNormal, float _penetration)
 {
-    const float otherMass = _other ? _other->GetMass() : INT_MAX;
+    const float otherMass = _other ? _other->GetMass() : FLT_MAX;
     const float ourMassFactor = otherMass / (GetMass() + otherMass);
 
     transform.SetWorldPosition(transform.GetWorldPosition() - ourMassFactor * _ptNormal * _penetration);

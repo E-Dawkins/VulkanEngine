@@ -11,6 +11,7 @@ GravityGameObject::GravityGameObject()
     SetRoot(m_sphereColl);
     
     m_sphereColl->SetRadius(0.25f);
+    // m_sphereColl->SetVelocity(glm::vec3(0, 0, -1));
     m_sphereColl->SetUseGravity(true);
     
     // Initialize mesh component
