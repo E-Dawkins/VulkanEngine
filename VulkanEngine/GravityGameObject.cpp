@@ -10,15 +10,14 @@ GravityGameObject::GravityGameObject()
     m_sphereColl = ObjectComponent::CreateComponent<SphereColliderComponent>("Gravity");
     SetRoot(m_sphereColl);
     
-    m_sphereColl->SetRadius(0.25f);
-    // m_sphereColl->SetVelocity(glm::vec3(0, 0, -1));
+    m_sphereColl->transform.SetWorldScale(glm::vec3(0.5f, 0.25f, 0.25f));
     m_sphereColl->SetUseGravity(true);
     
     // Initialize mesh component
     m_meshComponent = ObjectComponent::CreateComponent<MeshComponent>("Mesh");
     m_meshComponent->AttachTo(m_sphereColl);
 
-    m_meshComponent->SetMesh(Renderer::GetInstance()->GetMesh("house"));
+    m_meshComponent->SetMesh(Renderer::GetInstance()->GetMesh("sphere"));
     m_meshComponent->SetMaterial(Renderer::GetInstance()->GetMaterial("house"));
 }
 

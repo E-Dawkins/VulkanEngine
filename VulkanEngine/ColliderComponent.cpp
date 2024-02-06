@@ -61,21 +61,21 @@ void ColliderComponent::UpdateCollider(float _deltaSeconds)
     // Only update the colliders' position / rotation if it is not static
     if (m_kinematic)
     {
-        m_velocity = glm::vec3(0);
+        m_linearVelocity = glm::vec3(0);
         m_angularVelocity = glm::vec3(0);
         return;
     }
         
     if (m_useGravity)
     {
-        m_velocity += g_gravity;
+        m_linearVelocity += g_gravity;
     }
     
-    transform.SetWorldPosition(transform.GetWorldPosition() + (m_velocity * _deltaSeconds));
+    transform.SetWorldPosition(transform.GetWorldPosition() + (m_linearVelocity * _deltaSeconds));
 
     const glm::quat qOld = transform.GetWorldRotation();
     const glm::quat w = glm::quat(0, m_angularVelocity);
-    // derived formula to apply angular velocity to a known quaternion rotation
+    // Derived formula to apply angular velocity to a known quaternion rotation
     const glm::quat qNew = qOld + (_deltaSeconds / 2.f) * w * qOld;
     transform.SetWorldRotation(normalize(qNew));
 }
@@ -98,36 +98,72 @@ void ColliderComponent::ResolveCollision(ColliderComponent* _other, glm::vec3 _c
     // Ensure normal is actually normalized
     const glm::vec3 normal = normalize(_ptNormal);
 
-    // Combined elasticity of the collision
-    float e = m_elasticity * _other->m_elasticity;
-
-    // These are just to reduce the size of the mammoth equation below
+    // Helpful variables for later calculations
     glm::vec3 rA = _contactPt - transform.GetWorldPosition();
     glm::vec3 rB = _contactPt - _other->transform.GetWorldPosition();
-    glm::vec3 rACrossN = cross(rA, normal);
-    glm::vec3 rBCrossN = cross(rB, normal);
-    glm::mat3 invTensorA = inverse(GetMoment());
-    glm::mat3 invTensorB = inverse(_other->GetMoment());
 
-    /* General Equation for the Impulse Magnitude Along a Collision Normal */
-    // Mammoth of an equation, but this gets the impulse magnitude along the collision normal...
-    float j = -(1.f + e) * dot(m_velocity - _other->m_velocity, normal) + dot(rACrossN, m_angularVelocity) - dot(rBCrossN, _other->m_angularVelocity) /
-        ((1.f / GetMass()) + (1.f / _other->GetMass()) + dot(rACrossN, (invTensorA * rACrossN)) + dot(rBCrossN, invTensorB * rBCrossN));
+    glm::vec3 vA = m_linearVelocity + cross(m_angularVelocity, rA);
+    glm::vec3 vB = _other->m_linearVelocity + cross(_other->m_angularVelocity, rB);
 
-    // ...so to get the actual force, we multiply the previously calculated magnitude by the collision normal.
-    glm::vec3 force = j * normal;
+    glm::vec3 dv = vB - vA;
 
-    // Delta (change) in velocity, and the extra tangential velocity created by 
-    // the fact that the point is rotating around the object's centre. (I think?)
-    glm::vec<3, float> deltaVel = _other->m_velocity - m_velocity;
-    glm::vec3 tangent = normalize(deltaVel - normal * dot(deltaVel, normal));
+    // Combined elasticity of the collision
+    float e = m_elasticity * _other->m_elasticity;
+    float eTerm = dot(normal,
+        m_linearVelocity + cross(rA, m_angularVelocity)
+        - _other->m_linearVelocity - cross(rB, _other->m_angularVelocity));
+    float combinedElasticity = e * eTerm;
 
-    // Apply the correct linear and angular velocities
-    m_velocity += force / GetMass();
-    _other->m_velocity -= force / GetMass();
-    
-    m_angularVelocity += inverse(GetMoment()) * cross(rA, tangent * force);
-    _other->m_angularVelocity -= inverse(_other->GetMoment()) * cross(rB, tangent * force);
+    // Collision Response - the generic collision response, i.e. minimal angular velocity, mostly linear velocity.
+    float constraintMass =
+        ((1.f / GetMass()) + (1.f / _other->GetMass())) +
+            dot(normal,
+                cross(inverse(GetMoment())
+                * cross(rA, normal), rA) +
+                cross(inverse(_other->GetMoment())
+                * cross(rB, normal), rB)
+            );
+
+    if (constraintMass > 0.f)
+    {
+        float jn = max(-dot(dv, normal) + combinedElasticity, 0.f);
+        jn /= constraintMass;
+        
+        m_linearVelocity -= normal * (jn / GetMass());
+        _other->m_linearVelocity += normal * (jn / _other->GetMass());
+        
+        m_angularVelocity -= inverse(GetMoment()) * cross(rA, normal * jn);
+        _other->m_angularVelocity += inverse(_other->GetMoment()) * cross(rB, normal * jn);
+    }
+
+    // Friction - this is where most of the angular velocity gets applied based on the friction between the objects.
+    glm::vec3 tangent = dv - normal * dot(dv, normal);
+    float tanLength = length(tangent);
+
+    if (tanLength > 0)
+    {
+        tangent /= tanLength;
+
+        float frictionalMass = ((1.f / GetMass()) + (1.f / _other->GetMass())) +
+            dot(tangent,
+                cross(inverse(GetMoment()) * cross(rA, tangent), rA) +
+                cross(inverse(_other->GetMoment()) * cross(rB, tangent), rB)
+            );
+
+        if (frictionalMass > 0.f)
+        {
+            float frictionCoef = m_friction * _other->m_friction;
+            float jt = -dot(dv, tangent) * frictionCoef;
+
+            jt /= frictionalMass;
+
+            m_linearVelocity -= tangent * (jt / GetMass());
+            _other->m_linearVelocity += tangent * (jt / _other->GetMass());
+
+            m_angularVelocity -= inverse(GetMoment()) * cross(rA, tangent * jt);
+            _other->m_angularVelocity += inverse(_other->GetMoment()) * cross(rB, tangent * jt);
+        }
+    }
     
     // Colliders are penetrating, so apply contact forces to separate them
     if (_penetration > 0)

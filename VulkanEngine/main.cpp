@@ -7,6 +7,8 @@
 #include "PhysicsSolver.h"
 #include "TestGameObject.h"
 
+#include <glm/gtx/rotate_vector.hpp>
+
 int main() 
 {
     Renderer::GetInstance()->Initialize(800, 600);
@@ -33,9 +35,22 @@ int main()
     std::vector<GameObject*> gameObjects;
     
     gameObjects.push_back(new GravityGameObject());
-    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(0, 0.002f, 1.5f));
+    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(0.4f, 0, 5.f));
+    
+    int rows = 10;
 
-    gameObjects.push_back(new TestGameObject());
+    for (int i = 0; i < rows; i++)
+    {
+        int perRow = 1 + 8 * i;
+        for (int j = 0; j < perRow; j++)
+        {
+            gameObjects.push_back(new TestGameObject());
+
+            float rads = glm::radians(360.f / (float)(perRow - i)) * j;
+            glm::vec3 pos = rotate(glm::vec3(i, 0, 0), rads, glm::vec3(0, 0, 1));
+            gameObjects.back()->GetRoot()->transform.SetWorldPosition(pos);
+        }
+    }
     
     for (const auto object : gameObjects)
     {
