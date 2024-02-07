@@ -35,7 +35,9 @@ int main()
     std::vector<GameObject*> gameObjects;
     
     gameObjects.push_back(new GravityGameObject());
-    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(0.4f, 0, 5.f));
+    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(0.f, 0.5f, 5.f));
+    gameObjects.back()->GetRoot()->transform.SetWorldScale(glm::vec3(0.5f, 0.25f, 0.25f));
+    gameObjects.back()->GetRoot()->transform.SetWorldRotation(rotate(glm::quat(1, 0, 0, 0), glm::radians(37.f), g_upVector));
     
     int rows = 10;
 

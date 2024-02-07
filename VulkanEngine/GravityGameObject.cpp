@@ -8,10 +8,8 @@ GravityGameObject::GravityGameObject()
 {
     // Initialize sphere collider
     m_sphereColl = ObjectComponent::CreateComponent<SphereColliderComponent>("Gravity");
-    SetRoot(m_sphereColl);
-    
-    m_sphereColl->transform.SetWorldScale(glm::vec3(0.5f, 0.25f, 0.25f));
     m_sphereColl->SetUseGravity(true);
+    SetRoot(m_sphereColl);
     
     // Initialize mesh component
     m_meshComponent = ObjectComponent::CreateComponent<MeshComponent>("Mesh");

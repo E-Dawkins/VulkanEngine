@@ -14,9 +14,15 @@ bool SphereColliderComponent::SphereCollision(ColliderComponent* _otherCollider,
 
     glm::vec3 aToB = normalize(otherSphere->transform.GetWorldPosition() - transform.GetWorldPosition());
     glm::vec3 bToA = normalize(transform.GetWorldPosition() - otherSphere->transform.GetWorldPosition());
+
+    glm::quat rotA = transform.GetWorldRotation();
+    glm::quat rotB = otherSphere->transform.GetWorldRotation();
     
-    float rA = length(aToB * transform.GetWorldScale());
-    float rB = length(bToA * otherSphere->transform.GetWorldScale());
+    glm::vec3 rotScaleA = glm::abs(rotA * transform.GetWorldScale());
+    glm::vec3 rotScaleB = glm::abs(rotB * otherSphere->transform.GetWorldScale());
+    
+    float rA = length(aToB * rotScaleA);
+    float rB = length(bToA * rotScaleB);
     
     // Not colliding, return false
     if (distance(transform.GetWorldPosition(), otherSphere->transform.GetWorldPosition()) > rA + rB)
@@ -25,7 +31,7 @@ bool SphereColliderComponent::SphereCollision(ColliderComponent* _otherCollider,
     }
     
     // Collision point is the edge point of the sphere
-    _collisionPoint = transform.GetWorldPosition() + aToB * transform.GetWorldScale();
+    _collisionPoint = transform.GetWorldPosition() + aToB * rotScaleA;
 
     // Collision normal is just the direction to the contact point
     _collisionNormal = normalize(_collisionPoint - transform.GetWorldPosition());

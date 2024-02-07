@@ -47,7 +47,7 @@ void Material_Base::RenderMaterial(const VkCommandBuffer _commandBuffer) const
 void Material_Base::UpdateMaterial()
 {
     // Update 'camera' view / projection matrices
-    ubo.view = lookAt(glm::vec3(4, -4, 3), glm::vec3(0), glm::vec3(0.f, 0.f, 1.f));
+    ubo.view = lookAt(glm::vec3(5, 5, 7), glm::vec3(0), glm::vec3(0.f, 0.f, 1.f));
     ubo.proj = glm::perspective(glm::radians(45.f), Renderer::GetInstance()->GetSwapchainRatio(), 0.1f, 100.f);
     ubo.proj[1][1] *= -1;
 

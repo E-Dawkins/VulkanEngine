@@ -43,7 +43,7 @@ private:
     
     std::unordered_map<std::array<int, 3>, std::vector<ColliderComponent*>, ArrayHasher> m_colliderMap{};
 
-    std::array<int, 3> m_cellSize = {10, 10, 10};
+    std::array<int, 3> m_cellSize = {3, 3, 3};
 
     uint16_t m_colliderCount = 0;
 };
