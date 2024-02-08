@@ -172,6 +172,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ColliderComponent.cpp" />
+    <ClCompile Include="CubeColliderComponent.cpp" />
     <ClCompile Include="GravityGameObject.cpp" />
     <ClCompile Include="Material_Base.cpp" />
     <ClCompile Include="main.cpp">
@@ -211,8 +212,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ColliderComponent.h" />
+    <ClInclude Include="CubeColliderComponent.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="GlobalConstants.h" />
     <ClInclude Include="GravityGameObject.h" />
+    <ClInclude Include="MathHelpers.h" />
     <ClInclude Include="StringConverter.h" />
     <ClInclude Include="Material_Base.h" />
     <ClInclude Include="Material_Unlit.h" />

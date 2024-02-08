@@ -15,6 +15,7 @@ public:
 
     /* Collision Resolvers */
     virtual bool SphereCollision(ColliderComponent* _otherCollider, glm::vec3& _collisionPoint, glm::vec3& _collisionNormal, float& _penetration);
+    virtual bool CubeCollision(ColliderComponent* _otherCollider, glm::vec3& _collisionPoint, glm::vec3& _collisionNormal, float& _penetration);
 
     /* Setters */
     void SetUseGravity(const bool _useGravity)      { m_useGravity = _useGravity; }
@@ -31,6 +32,8 @@ public:
 protected:
     void ResolveCollision(ColliderComponent* _other, glm::vec3 _contactPt, glm::vec3 _ptNormal, float _penetration);
     void ApplyContactForces(ColliderComponent* _other, glm::vec3 _ptNormal, float _penetration);
+
+    virtual glm::mat4 GetColliderMatrix() { return transform.GetWorldMatrix(); }
     
 protected:
     friend class PhysicsSolver;
@@ -38,13 +41,15 @@ protected:
     enum ColliderType
     {
         CT_UNKNOWN,
-        CT_SPHERE
+        CT_SPHERE,
+        CT_CUBE
     };
 
     std::map<ColliderType, std::string> m_ctStrings =
     {
         {CT_UNKNOWN, "UNKNOWN"},
-        {CT_SPHERE, "SPHERE"}
+        {CT_SPHERE, "SPHERE"},
+        {CT_CUBE, "CUBE"}
     };
 
     ColliderType m_type = CT_UNKNOWN;

@@ -19,7 +19,7 @@ void ColliderComponent::BeginComponent()
             if (g_visualizeColliders)
             {
                 const auto material = Renderer::GetInstance()->GetMaterial("collider");
-                material->pushConstants.model = transform.GetWorldMatrix();
+                material->pushConstants.model = GetColliderMatrix();
                 material->UpdateMaterial();
                 material->RenderMaterial(_buffer);
                 m_visualizedMesh->DrawMesh(_buffer);
@@ -45,6 +45,7 @@ void ColliderComponent::CheckForCollision(ColliderComponent* _otherCollider)
     switch (_otherCollider->m_type)
     {
         case CT_SPHERE: didCollide = SphereCollision(_otherCollider, contactPt, contactNorm, penetration); break;
+        case CT_CUBE: didCollide = CubeCollision(_otherCollider, contactPt, contactNorm, penetration); break;
 
         case CT_UNKNOWN: std::cout << "Unknown collider type!" << std::endl;
     }
@@ -84,6 +85,14 @@ bool ColliderComponent::SphereCollision(ColliderComponent* _otherCollider, glm::
                                         glm::vec3& _collisionNormal, float& _penetration)
 {
     std::cout << m_ctStrings[CT_SPHERE] << " collision not implemented for " << m_ctStrings[m_type] << std::endl;
+
+    return false;
+}
+
+bool ColliderComponent::CubeCollision(ColliderComponent* _otherCollider, glm::vec3& _collisionPoint,
+                                        glm::vec3& _collisionNormal, float& _penetration)
+{
+    std::cout << m_ctStrings[CT_CUBE] << " collision not implemented for " << m_ctStrings[m_type] << std::endl;
 
     return false;
 }

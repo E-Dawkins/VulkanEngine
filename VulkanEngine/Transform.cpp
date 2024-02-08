@@ -69,6 +69,7 @@ glm::vec3 Transform::GetLocalScale() const
 {
     return m_localScale;
 }
+
 #pragma endregion
 
 #pragma region Setters

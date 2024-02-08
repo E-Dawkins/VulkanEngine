@@ -12,32 +12,24 @@ bool SphereColliderComponent::SphereCollision(ColliderComponent* _otherCollider,
 {
     const auto otherSphere = dynamic_cast<SphereColliderComponent*>(_otherCollider);
 
-    glm::vec3 aToB = normalize(otherSphere->transform.GetWorldPosition() - transform.GetWorldPosition());
-    glm::vec3 bToA = normalize(transform.GetWorldPosition() - otherSphere->transform.GetWorldPosition());
-
-    glm::quat rotA = transform.GetWorldRotation();
-    glm::quat rotB = otherSphere->transform.GetWorldRotation();
+    const float rA = GetRadius();
+    const float rB = otherSphere->GetRadius();
     
-    glm::vec3 rotScaleA = glm::abs(rotA * transform.GetWorldScale());
-    glm::vec3 rotScaleB = glm::abs(rotB * otherSphere->transform.GetWorldScale());
-    
-    float rA = length(aToB * rotScaleA);
-    float rB = length(bToA * rotScaleB);
-    
-    // Not colliding, return false
-    if (distance(transform.GetWorldPosition(), otherSphere->transform.GetWorldPosition()) > rA + rB)
+    // Not colliding, return early
+    const float dist = distance(transform.GetWorldPosition(), otherSphere->transform.GetWorldPosition());
+    if (dist > rA + rB)
     {
         return false;
     }
     
-    // Collision point is the edge point of the sphere
-    _collisionPoint = transform.GetWorldPosition() + aToB * rotScaleA;
+    // Collision point is the closest point on sphere A
+    _collisionPoint = MathHelpers::ClosestPointOnSphere(otherSphere->transform.GetWorldPosition(), transform.GetWorldPosition(), rA);
 
-    // Collision normal is just the direction to the contact point
+    // Collision normal is just the direction to the collision point
     _collisionNormal = normalize(_collisionPoint - transform.GetWorldPosition());
 
-    // Collision penetration is the radius - distance to collision point
-    _penetration = abs(rA - distance(transform.GetWorldPosition(), _collisionPoint));
+    // Collision penetration is radius - distance to point
+    _penetration = rB - length(_collisionPoint - otherSphere->transform.GetWorldPosition());
     
     return true;
 }
@@ -49,13 +41,11 @@ glm::mat3 SphereColliderComponent::GetMoment() const
         return glm::mat3(1);
     }
 
-    glm::vec3 scale = transform.GetWorldScale();
-    float inertia = (2.f / 3.f) * m_mass;
-    
-    glm::mat3 moment = glm::mat3(1);
-    moment[0].x = inertia * scale.x * scale.x;
-    moment[1].y = inertia * scale.y * scale.y;
-    moment[2].z = inertia * scale.z * scale.z;
-    
-    return moment;
+    return glm::mat3((2.f / 3.f) * GetMass() * GetRadius() * GetRadius());
+}
+
+glm::mat4 SphereColliderComponent::GetColliderMatrix()
+{
+    transform.SetWorldScale(glm::vec3(GetRadius()));
+    return transform.GetWorldMatrix();
 }
