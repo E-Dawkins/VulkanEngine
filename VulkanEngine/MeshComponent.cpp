@@ -22,6 +22,7 @@ void MeshComponent::DrawMesh(const VkCommandBuffer _commandBuffer) const
     m_material->pushConstants.model = transform.GetWorldMatrix();
     m_material->UpdateMaterial();
     m_material->RenderMaterial(_commandBuffer);
+    
     m_meshPtr->DrawMesh(_commandBuffer);
 }
 

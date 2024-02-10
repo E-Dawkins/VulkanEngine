@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "GameObject.h"
 
-class SphereColliderComponent;
+class ColliderComponent;
 class MeshComponent;
 
 class TestGameObject : public GameObject
@@ -13,5 +13,5 @@ public:
 
 private:
     MeshComponent* m_meshComponent = nullptr;
-    SphereColliderComponent* m_sphereColl = nullptr;
+    ColliderComponent* m_coll = nullptr;
 };

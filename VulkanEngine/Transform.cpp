@@ -70,6 +70,21 @@ glm::vec3 Transform::GetLocalScale() const
     return m_localScale;
 }
 
+glm::vec3 Transform::GetLocalUp() const
+{
+    return m_worldRotation * g_upVector * conjugate(m_worldRotation);
+}
+
+glm::vec3 Transform::GetLocalRight() const
+{
+    return m_worldRotation * g_rightVector * conjugate(m_worldRotation);
+}
+
+glm::vec3 Transform::GetLocalForward() const
+{
+    return m_worldRotation * g_forwardVector * conjugate(m_worldRotation);
+}
+
 #pragma endregion
 
 #pragma region Setters

@@ -16,6 +16,9 @@ public:
     glm::vec3 GetLocalPosition() const;
     glm::quat GetLocalRotation() const;
     glm::vec3 GetLocalScale() const;
+    glm::vec3 GetLocalUp() const;
+    glm::vec3 GetLocalRight() const;
+    glm::vec3 GetLocalForward() const;
 
     /* Setters */
     void SetParent(Transform* _parent);

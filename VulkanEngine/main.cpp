@@ -16,6 +16,7 @@ int main()
     // Load Meshes
     Renderer::GetInstance()->LoadMesh("models/viking_room.obj", "house", true);
     Renderer::GetInstance()->LoadMesh("models/sphere.obj", "sphere", true);
+    Renderer::GetInstance()->LoadMesh("models/cube.obj", "cube", true);
 
     // Load Textures
     Renderer::GetInstance()->LoadTexture("textures/viking_room.png", "house");
@@ -31,27 +32,15 @@ int main()
     colliderMat->Init();
     
     // Initialize Game Objects
-
     std::vector<GameObject*> gameObjects;
     
     gameObjects.push_back(new GravityGameObject());
-    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(-0.05f, 0.05f, 3.f));
-    gameObjects.back()->GetRoot()->transform.SetWorldScale(glm::vec3(0.25f, 10.f, 10.f));
+    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(0, 1.2f, 3.f));
+    gameObjects.back()->GetRoot()->transform.SetWorldScale(glm::vec3(0.5f));
+    gameObjects.back()->GetRoot()->transform.SetWorldRotation(rotate(glm::quat(1, 0, 0, 0), glm::radians(65.f), g_rightVector));
     
-    int rows = 10;
-
-    for (int i = 0; i < rows; i++)
-    {
-        int perRow = 1 + 8 * i;
-        for (int j = 0; j < perRow; j++)
-        {
-            gameObjects.push_back(new TestGameObject());
-
-            float rads = glm::radians(360.f / (float)(perRow - i)) * j;
-            glm::vec3 pos = rotate(glm::vec3(i, 0, 0), rads, glm::vec3(0, 0, 1));
-            gameObjects.back()->GetRoot()->transform.SetWorldPosition(pos);
-        }
-    }
+    gameObjects.push_back(new TestGameObject());
+    gameObjects.back()->GetRoot()->transform.SetWorldScale(glm::vec3(0.5f, 1.f, 0.5f));
     
     for (const auto object : gameObjects)
     {

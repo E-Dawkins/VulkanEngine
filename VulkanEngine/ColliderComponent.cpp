@@ -36,24 +36,13 @@ void ColliderComponent::CheckForCollision(ColliderComponent* _otherCollider)
         return;
     }
     
-    glm::vec3 contactPt;
-    glm::vec3 contactNorm;
-    float penetration = 0.f;
-    bool didCollide = false;
-    
     // Determine which collision function to use, based on the other colliders' type
     switch (_otherCollider->m_type)
     {
-        case CT_SPHERE: didCollide = SphereCollision(_otherCollider, contactPt, contactNorm, penetration); break;
-        case CT_CUBE: didCollide = CubeCollision(_otherCollider, contactPt, contactNorm, penetration); break;
+        case CT_SPHERE: SphereCollision(_otherCollider); break;
+        case CT_CUBE: CubeCollision(_otherCollider); break;
 
         case CT_UNKNOWN: std::cout << "Unknown collider type!" << std::endl;
-    }
-
-    // If the colliders did collide, then resolve the collision
-    if (didCollide)
-    {
-        ResolveCollision(_otherCollider, contactPt, contactNorm, penetration);
     }
 }
 
@@ -69,7 +58,7 @@ void ColliderComponent::UpdateCollider(float _deltaSeconds)
         
     if (m_useGravity)
     {
-        m_linearVelocity += g_gravity;
+        m_linearVelocity += g_gravity * _deltaSeconds;
     }
     
     transform.SetWorldPosition(transform.GetWorldPosition() + (m_linearVelocity * _deltaSeconds));
@@ -79,18 +68,18 @@ void ColliderComponent::UpdateCollider(float _deltaSeconds)
     // Derived formula to apply angular velocity to a known quaternion rotation
     const glm::quat qNew = qOld + (_deltaSeconds / 2.f) * w * qOld;
     transform.SetWorldRotation(normalize(qNew));
+
+    // std::cout << "Pos " << StringConverter::LogVec3(transform.GetWorldPosition()) << " Rot " << StringConverter::LogQuat(transform.GetWorldRotation()) << std::endl;;
 }
 
-bool ColliderComponent::SphereCollision(ColliderComponent* _otherCollider, glm::vec3& _collisionPoint,
-                                        glm::vec3& _collisionNormal, float& _penetration)
+bool ColliderComponent::SphereCollision(ColliderComponent* _otherCollider)
 {
     std::cout << m_ctStrings[CT_SPHERE] << " collision not implemented for " << m_ctStrings[m_type] << std::endl;
 
     return false;
 }
 
-bool ColliderComponent::CubeCollision(ColliderComponent* _otherCollider, glm::vec3& _collisionPoint,
-                                        glm::vec3& _collisionNormal, float& _penetration)
+bool ColliderComponent::CubeCollision(ColliderComponent* _otherCollider)
 {
     std::cout << m_ctStrings[CT_CUBE] << " collision not implemented for " << m_ctStrings[m_type] << std::endl;
 

@@ -8,7 +8,7 @@ SphereColliderComponent::SphereColliderComponent()
     m_visualizedMesh = Renderer::GetInstance()->GetMesh("sphere");
 }
 
-bool SphereColliderComponent::SphereCollision(ColliderComponent* _otherCollider, glm::vec3& _collisionPoint, glm::vec3& _collisionNormal, float& _penetration)
+bool SphereColliderComponent::SphereCollision(ColliderComponent* _otherCollider)
 {
     const auto otherSphere = dynamic_cast<SphereColliderComponent*>(_otherCollider);
 
@@ -23,13 +23,15 @@ bool SphereColliderComponent::SphereCollision(ColliderComponent* _otherCollider,
     }
     
     // Collision point is the closest point on sphere A
-    _collisionPoint = MathHelpers::ClosestPointOnSphere(otherSphere->transform.GetWorldPosition(), transform.GetWorldPosition(), rA);
+    glm::vec3 contact = MathHelpers::ClosestPointOnSphere(otherSphere->transform.GetWorldPosition(), transform.GetWorldPosition(), rA);
 
     // Collision normal is just the direction to the collision point
-    _collisionNormal = normalize(_collisionPoint - transform.GetWorldPosition());
+    glm::vec3 normal = normalize(contact - transform.GetWorldPosition());
 
     // Collision penetration is radius - distance to point
-    _penetration = rB - length(_collisionPoint - otherSphere->transform.GetWorldPosition());
+    float pen = rB - length(contact - otherSphere->transform.GetWorldPosition());
+
+    ResolveCollision(otherSphere, contact, normal, pen);
     
     return true;
 }
@@ -46,6 +48,7 @@ glm::mat3 SphereColliderComponent::GetMoment() const
 
 glm::mat4 SphereColliderComponent::GetColliderMatrix()
 {
-    transform.SetWorldScale(glm::vec3(GetRadius()));
-    return transform.GetWorldMatrix();
+    Transform copy = transform;
+    copy.SetWorldScale(glm::vec3(GetRadius()));
+    return copy.GetWorldMatrix();
 }

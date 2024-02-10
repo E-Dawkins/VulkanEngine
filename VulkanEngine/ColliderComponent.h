@@ -14,8 +14,8 @@ public:
     void ClearPreviousCollisions() { m_previousCollisions.clear(); }
 
     /* Collision Resolvers */
-    virtual bool SphereCollision(ColliderComponent* _otherCollider, glm::vec3& _collisionPoint, glm::vec3& _collisionNormal, float& _penetration);
-    virtual bool CubeCollision(ColliderComponent* _otherCollider, glm::vec3& _collisionPoint, glm::vec3& _collisionNormal, float& _penetration);
+    virtual bool SphereCollision(ColliderComponent* _otherCollider);
+    virtual bool CubeCollision(ColliderComponent* _otherCollider);
 
     /* Setters */
     void SetUseGravity(const bool _useGravity)      { m_useGravity = _useGravity; }
@@ -30,9 +30,9 @@ public:
     virtual glm::mat3 GetMoment() const                     { return glm::mat3(1); }
 
 protected:
-    void ResolveCollision(ColliderComponent* _other, glm::vec3 _contactPt, glm::vec3 _ptNormal, float _penetration);
+    void ResolveCollision(ColliderComponent* _other, glm::vec3 _contact, glm::vec3 _collisionNormal, float _pen);
     void ApplyContactForces(ColliderComponent* _other, glm::vec3 _ptNormal, float _penetration);
-
+    
     virtual glm::mat4 GetColliderMatrix() { return transform.GetWorldMatrix(); }
     
 protected:
