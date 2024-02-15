@@ -56,20 +56,18 @@ void ColliderComponent::UpdateCollider(float _deltaSeconds)
         return;
     }
         
+    transform.SetWorldPosition(transform.GetWorldPosition() + (m_linearVelocity * _deltaSeconds));
+    
     if (m_useGravity)
     {
-        m_linearVelocity += g_gravity * _deltaSeconds;
+        ApplyForce(g_gravity * _deltaSeconds, glm::vec3(0));
     }
-    
-    transform.SetWorldPosition(transform.GetWorldPosition() + (m_linearVelocity * _deltaSeconds));
 
     const glm::quat qOld = transform.GetWorldRotation();
     const glm::quat w = glm::quat(0, m_angularVelocity);
     // Derived formula to apply angular velocity to a known quaternion rotation
     const glm::quat qNew = qOld + (_deltaSeconds / 2.f) * w * qOld;
     transform.SetWorldRotation(normalize(qNew));
-
-    // std::cout << "Pos " << StringConverter::LogVec3(transform.GetWorldPosition()) << " Rot " << StringConverter::LogQuat(transform.GetWorldRotation()) << std::endl;;
 }
 
 bool ColliderComponent::SphereCollision(ColliderComponent* _otherCollider)
@@ -127,11 +125,8 @@ void ColliderComponent::ResolveCollision(ColliderComponent* _other, glm::vec3 _c
         float jn = max(-dot(dv, normal) + combinedElasticity, 0.f);
         jn /= constraintMass;
         
-        m_linearVelocity -= normal * (jn / GetMass());
-        _other->m_linearVelocity += normal * (jn / _other->GetMass());
-        
-        m_angularVelocity -= inverse(GetMoment()) * cross(rA, normal * jn);
-        _other->m_angularVelocity += inverse(_other->GetMoment()) * cross(rB, normal * jn);
+        ApplyForce(-normal * jn, rA);
+        _other->ApplyForce(normal * jn, rB);
     }
 
     // Friction - this is where most of the angular velocity gets applied based on the friction between the objects.
@@ -154,12 +149,9 @@ void ColliderComponent::ResolveCollision(ColliderComponent* _other, glm::vec3 _c
             float jt = -dot(dv, tangent) * frictionCoef;
 
             jt /= frictionalMass;
-
-            m_linearVelocity -= tangent * (jt / GetMass());
-            _other->m_linearVelocity += tangent * (jt / _other->GetMass());
-
-            m_angularVelocity -= inverse(GetMoment()) * cross(rA, tangent * jt);
-            _other->m_angularVelocity += inverse(_other->GetMoment()) * cross(rB, tangent * jt);
+            
+            ApplyForce(-tangent * jt, rA);
+            _other->ApplyForce(tangent * jt, rB);
         }
     }
     
@@ -167,6 +159,50 @@ void ColliderComponent::ResolveCollision(ColliderComponent* _other, glm::vec3 _c
     if (_penetration > 0)
     {
         ApplyContactForces(_other, _ptNormal, _penetration);
+    }
+}
+
+void ColliderComponent::ResolveCollision1(ColliderComponent* _other, glm::vec3 _contact, glm::vec3 _collisionNormal,
+    float _pen)
+{
+    glm::vec3 ra = _contact - transform.GetWorldPosition();
+    glm::vec3 rb = _other->m_kinematic ? glm::vec3(0) : (_contact - _other->transform.GetWorldPosition());
+
+    glm::vec3 normal = normalize(_collisionNormal);
+
+    glm::vec3 va = m_linearVelocity;
+    glm::vec3 vb = _other->m_kinematic ? glm::vec3(0) : _other->m_linearVelocity;
+    glm::vec3 wa = m_angularVelocity;
+    glm::vec3 wb = _other->m_kinematic ? glm::vec3(0) : _other->m_angularVelocity;
+    float vab = dot((va + cross(wa, ra) - vb - cross(wb, rb)), normal);
+
+    float e = m_elasticity * _other->m_elasticity;
+    glm::mat3 invIa = inverse(GetMoment());
+    glm::mat3 invIb = inverse(_other->GetMoment());
+    float invMassA = 1.f / GetMass();
+    float invMassB = _other->m_kinematic ? 0.f : (1.f / _other->GetMass());
+    glm::vec3 torqueA = invIa * cross(cross(ra, normal), ra);
+    glm::vec3 torqueB = _other->m_kinematic ? glm::vec3(0) : (invIb * cross(cross(rb, normal), rb));
+    float d = dot(normalize(torqueA + torqueB), normal);
+    float j = (-(1.f + e) * vab) / (invMassA + invMassB + dot(torqueA + torqueB, normal));
+
+    ApplyForce(j * normal, ra);
+    _other->ApplyForce(-j * normal, rb);
+
+    if (_pen > 0)
+    {
+        ApplyContactForces(_other, normal, _pen);
+    }
+}
+
+void ColliderComponent::ApplyForce(const glm::vec3 _force, const glm::vec3 _pos)
+{
+    m_linearVelocity += _force / GetMass();
+    m_angularVelocity += cross(_pos, _force) * inverse(GetMoment());
+
+    if (length(m_linearVelocity) >= 10.f)
+    {
+        int a = 5;
     }
 }
 

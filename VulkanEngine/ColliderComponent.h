@@ -31,6 +31,8 @@ public:
 
 protected:
     void ResolveCollision(ColliderComponent* _other, glm::vec3 _contact, glm::vec3 _collisionNormal, float _pen);
+    void ResolveCollision1(ColliderComponent* _other, glm::vec3 _contact, glm::vec3 _collisionNormal, float _pen);
+    void ApplyForce(const glm::vec3 _force, const glm::vec3 _pos);
     void ApplyContactForces(ColliderComponent* _other, glm::vec3 _ptNormal, float _penetration);
     
     virtual glm::mat4 GetColliderMatrix() { return transform.GetWorldMatrix(); }

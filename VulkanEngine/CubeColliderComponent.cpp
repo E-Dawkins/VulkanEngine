@@ -1,6 +1,8 @@
 ﻿#include "pch.h"
 #include "CubeColliderComponent.h"
 
+#include <glm/common.hpp>
+
 CubeColliderComponent::CubeColliderComponent()
 {
     m_type = CT_CUBE;
@@ -12,21 +14,16 @@ bool CubeColliderComponent::CubeCollision(ColliderComponent* _otherCollider)
 {
     const auto otherCube = dynamic_cast<CubeColliderComponent*>(_otherCollider);
 
-    glm::vec3 normal = glm::vec3(0);
-    glm::vec3 contact = glm::vec3(0);
+    glm::vec3 normal(0);
+    glm::vec3 contact(0);
     float pen = 0;
-    int numContacts = 0;
 
-    CheckCubeCorners(otherCube, contact, numContacts, pen, normal);
-
-    if (otherCube->CheckCubeCorners(this, contact, numContacts, pen, normal))
-    {
-        normal = -normal;
-    }
-
+    SATImplementation(otherCube, contact, pen, normal);
+    otherCube->SATImplementation(this, contact, pen, normal);
+    
     if (pen > 0)
     {
-        ResolveCollision(otherCube, contact / (float)numContacts, normal, pen);
+        ResolveCollision1(otherCube, contact, normal, pen);
         
         return true;
     }
@@ -34,133 +31,80 @@ bool CubeColliderComponent::CubeCollision(ColliderComponent* _otherCollider)
     return false;
 }
 
-bool CubeColliderComponent::CheckCubeCorners(CubeColliderComponent* _otherCube, glm::vec3& _contact, int& _numContacts,
-                                             float& _pen, glm::vec3& _edgeNormal)
+bool CubeColliderComponent::SATImplementation(CubeColliderComponent* _otherCube, glm::vec3& _contact, float& _pen,
+    glm::vec3& _normal) const
 {
-    float minX, maxX, minY, maxY, minZ, maxZ;
-    glm::vec3 extents = glm::abs(transform.GetWorldScale());
-    glm::vec3 otherExtents = glm::abs(_otherCube->transform.GetWorldScale());
-    float boxW = otherExtents.x * 2.f, boxD = otherExtents.y * 2.f, boxH = otherExtents.z * 2.f;
+    // Find min & max vertices in each cardinal direction
+    glm::vec3 localContact(0);
     int numLocalContacts = 0;
-    glm::vec3 localContact = glm::vec3(0);
-    bool first = true;
-
-    // Loop over all corners of other cube
-    for (float x = -otherExtents.x; x < boxW; x += boxW)
-    {
-        for (float y = -otherExtents.y; y < boxD; y += boxD)
-        {
-            for (float z = -otherExtents.z; z < boxH; z += boxH)
-            {
-                // Get point position in world space
-                glm::vec3 p = _otherCube->transform.GetWorldPosition()
-                    + x * _otherCube->transform.GetLocalRight()
-                    + y * _otherCube->transform.GetLocalForward()
-                    + z * _otherCube->transform.GetLocalUp();
-
-                // Get position in this cube's space
-                // glm::vec3 p0 = p - transform.GetWorldPosition();
-                
-                glm::vec3 p0 = glm::vec3(
-                    dot(p - transform.GetWorldPosition(), transform.GetLocalRight()),
-                    dot(p - transform.GetWorldPosition(), transform.GetLocalForward()),
-                    dot(p - transform.GetWorldPosition(), transform.GetLocalUp())
-                    );
-
-                // Update extents in each cardinal direction in this cube's space, i.e. along the separating axes
-                if (first || p0.x < minX) minX = p0.x;
-                if (first || p0.x > maxX) maxX = p0.x;
-                if (first || p0.y < minY) minY = p0.y;
-                if (first || p0.y > maxY) maxY = p0.y;
-                if (first || p0.z < minZ) minZ = p0.z;
-                if (first || p0.z > maxZ) maxZ = p0.z;
-
-                // If this corner is inside the box, add it to the list of contact points
-                if (p0.x >= -extents.x && p0.x <= extents.x &&
-                    p0.y >= -extents.y && p0.y <= extents.y &&
-                    p0.z >= -extents.z && p0.z <= extents.z)
-                {
-                    numLocalContacts++;
-                    localContact += p0;
-                }
-
-                first = false;
-            }
-        }
-    }
-
-    // If we lie entirely to one side of the cube along one
-    // axis, we've found a separating axis and can exit
-    if (maxX <= -extents.x || minX >= extents.x ||
-        maxY <= -extents.y || minY >= extents.y ||
-        maxZ <= -extents.z || minZ >= extents.z)
+    
+    glm::vec3 box1Min(0);
+    glm::vec3 box1Max(0);
+    GetMinMax(_otherCube->transform, box1Min, box1Max, localContact, numLocalContacts);
+    
+    glm::vec3 box2Min(0);
+    glm::vec3 box2Max(0);
+    _otherCube->GetMinMax(transform, box2Min, box2Max, localContact, numLocalContacts);
+    
+    if (box1Min.x > box2Max.x || box2Min.x > box1Max.x ||
+        box1Min.y > box2Max.y || box2Min.y > box1Max.y ||
+        box1Min.z > box2Max.z || box2Min.z > box1Max.z)
     {
         return false;
     }
 
-    // No contact point, exit
     if (numLocalContacts == 0)
     {
         return false;
     }
 
-    bool res = false;
-    _contact += transform.GetWorldPosition() + (localContact.x * transform.GetLocalRight() + localContact.y * transform.GetLocalForward()
-        + localContact.z * transform.GetLocalUp()) / (float)numLocalContacts;
-    _numContacts++;
-
-    // Find the minimum penetration vector as a penetration amount and normal
-    float pen0 = extents.x - minX;
-    if (pen0 > 0 && (pen0 < _pen || _pen == 0))
+    _pen = 0;
+    
+    float pen0 = box2Max.x - box1Min.x;
+    if (box1Min.x < box2Max.x && (pen0 < _pen || _pen == 0.f))
     {
-        _edgeNormal = transform.GetLocalRight();
+        _normal = -transform.GetLocalRight();
         _pen = pen0;
-        res = true;
     }
 
-    pen0 = maxX + extents.x;
-    if (pen0 > 0 && (pen0 < _pen || _pen == 0))
+    pen0 = box1Max.x - box2Min.x;
+    if (box2Min.x < box1Max.x && (pen0 < _pen || _pen == 0.f))
     {
-        _edgeNormal = -transform.GetLocalRight();
+        _normal = transform.GetLocalRight();
         _pen = pen0;
-        res = true;
     }
 
-    pen0 = extents.y - minY;
-    if (pen0 > 0 && (pen0 < _pen || _pen == 0))
+    pen0 = box2Max.y - box1Min.y;
+    if (box1Min.y < box2Max.y && (pen0 < _pen || _pen == 0.f))
     {
-        _edgeNormal = transform.GetLocalForward();
+        _normal = -transform.GetLocalForward();
         _pen = pen0;
-        res = true;
     }
 
-    pen0 = maxY + extents.y;
-    if (pen0 > 0 && (pen0 < _pen || _pen == 0))
+    pen0 = box1Max.y - box2Min.y;
+    if (box2Min.y < box1Max.y && (pen0 < _pen || _pen == 0.f))
     {
-        _edgeNormal = -transform.GetLocalForward();
+        _normal = transform.GetLocalForward();
         _pen = pen0;
-        res = true;
     }
 
-    pen0 = extents.z - minZ;
-    if (pen0 > 0 && (pen0 < _pen || _pen == 0))
+    pen0 = box2Max.z - box1Min.z;
+    if (box1Min.z < box2Max.z && (pen0 < _pen || _pen == 0.f))
     {
-        _edgeNormal = transform.GetLocalUp();
+        _normal = -transform.GetLocalUp();
         _pen = pen0;
-        res = true;
     }
 
-    pen0 = maxZ + extents.z;
-    if (pen0 > 0 && (pen0 < _pen || _pen == 0))
+    pen0 = box1Max.z - box2Min.z;
+    if (box2Min.z < box1Max.z && (pen0 < _pen || _pen == 0.f))
     {
-        _edgeNormal = -transform.GetLocalUp();
+        _normal = transform.GetLocalUp();
         _pen = pen0;
-        res = true;
     }
-
-    std::cout << "Pen " << _pen << " Norm " << StringConverter::LogVec3(_edgeNormal) << std::endl;
-
-    return res;
+    
+    _contact = localContact / static_cast<float>(numLocalContacts);
+    
+    return true;
 }
 
 glm::mat3 CubeColliderComponent::GetMoment() const
@@ -180,4 +124,53 @@ glm::mat3 CubeColliderComponent::GetMoment() const
     moment[2].z = inertia * scale.z * scale.z;
     
     return moment;
+}
+
+void CubeColliderComponent::GetMinMax(Transform _otherTransform, glm::vec3& _min, glm::vec3& _max, glm::vec3& _localContact, int& _numLocalContacts) const
+{
+    bool first = true;
+    _min = glm::vec3(0);
+    _max = glm::vec3(0);
+
+    glm::vec3 extents = abs(transform.GetWorldRotation() * transform.GetWorldScale() * conjugate(transform.GetWorldRotation()));
+    glm::vec3 otherExtents = abs(_otherTransform.GetWorldRotation() * _otherTransform.GetWorldScale() * conjugate(_otherTransform.GetWorldRotation()));
+    
+    for (float x = -otherExtents.x; x <= otherExtents.x; x += otherExtents.x * 2.f)
+    {
+        for (float y = -otherExtents.y; y <= otherExtents.y; y += otherExtents.y * 2.f)
+        {
+            for (float z = -otherExtents.z; z <= otherExtents.z; z += otherExtents.z * 2.f)
+            {
+                const glm::vec3 worldPtPos = _otherTransform.GetWorldPosition()
+                    + x * _otherTransform.GetLocalRight()
+                    + y * _otherTransform.GetLocalForward()
+                    + z * _otherTransform.GetLocalUp();
+
+                if (first || worldPtPos.x < _min.x) _min.x = worldPtPos.x;
+                if (first || worldPtPos.x > _max.x) _max.x = worldPtPos.x;
+                if (first || worldPtPos.y < _min.y) _min.y = worldPtPos.y;
+                if (first || worldPtPos.y > _max.y) _max.y = worldPtPos.y;
+                if (first || worldPtPos.z < _min.z) _min.z = worldPtPos.z;
+                if (first || worldPtPos.z > _max.z) _max.z = worldPtPos.z;
+
+                glm::vec3 localPtPos = worldPtPos - transform.GetWorldPosition();
+
+                // glm::vec3 localPtPos = glm::vec3(
+                //     dot(worldPtPos - transform.GetWorldPosition(), transform.GetLocalRight()),
+                //     dot(worldPtPos - transform.GetWorldPosition(), transform.GetLocalForward()),
+                //     dot(worldPtPos - transform.GetWorldPosition(), transform.GetLocalUp())
+                //     );
+                
+                if (localPtPos.x >= -extents.x && localPtPos.x <= extents.x &&
+                    localPtPos.y >= -extents.y && localPtPos.y <= extents.y &&
+                    localPtPos.z >= -extents.z && localPtPos.z <= extents.z)
+                {
+                    _numLocalContacts++;
+                    _localContact += worldPtPos;
+                }
+                
+                first = false;
+            }
+        }
+    }
 }

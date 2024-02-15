@@ -16,10 +16,27 @@ public:
 
     static float MaxComponent(const glm::vec3 _vec)
     {
-        const float minA = max(_vec.x, _vec.y);
-        const float minB = max(_vec.y, _vec.z);
+        const float maxA = max(_vec.x, _vec.y);
+        const float maxB = max(_vec.y, _vec.z);
 
-        return max(minA, minB);
+        return max(maxA, maxB);
+    }
+
+    static int MaxComponentIndex(const glm::vec3 _vec)
+    {
+        const float maxComp = MaxComponent(_vec);
+
+        if (glm::epsilonEqual(maxComp, _vec.x, glm::epsilon<float>()))
+        {
+            return 0;
+        }
+
+        if (glm::epsilonEqual(maxComp, _vec.y, glm::epsilon<float>()))
+        {
+            return 1;
+        }
+
+        return 2;
     }
     
     static bool PointInSphere(const glm::vec3 _point, const glm::vec3 _spherePos, const float _sphereRadius)
@@ -70,6 +87,11 @@ public:
             {d3, cross(_vector, glm::vec3(0, 0, 1))}
         };
 
-        return pairs[MaxComponent(glm::vec3(d1, d2, d3))];
+        return normalize(pairs[MaxComponent(glm::vec3(d1, d2, d3))]);
+    }
+
+    static glm::vec3 ProjectVectorOnAxis(const glm::vec3 _vector, const glm::vec3 _axis)
+    {
+        return (dot(_vector, _axis) / dot(_axis, _axis)) * _axis;
     }
 };

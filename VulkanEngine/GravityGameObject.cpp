@@ -10,6 +10,7 @@ GravityGameObject::GravityGameObject()
     // Initialize sphere collider
     // m_coll = ObjectComponent::CreateComponent<SphereColliderComponent>("Gravity");
     m_coll = ObjectComponent::CreateComponent<CubeColliderComponent>("Gravity");
+    // m_coll->SetVelocity(glm::vec3(0, 0, -1));
     m_coll->SetUseGravity(true);
     SetRoot(m_coll);
     
@@ -32,5 +33,6 @@ void GravityGameObject::Tick(const float _deltaSeconds)
 {
     GameObject::Tick(_deltaSeconds);
 
-    
+    auto mat = GetRoot()->transform.GetWorldMatrix();
+    int a = 5;
 }
