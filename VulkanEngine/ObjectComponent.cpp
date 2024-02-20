@@ -12,6 +12,7 @@ ObjectComponent::~ObjectComponent()
 void ObjectComponent::AttachTo(ObjectComponent* _parentComp)
 {
     _parentComp->m_attachedComponents.push_back(this);
+    m_parent = _parentComp;
 }
 
 void ObjectComponent::RemoveFrom(ObjectComponent* _parentComp) const

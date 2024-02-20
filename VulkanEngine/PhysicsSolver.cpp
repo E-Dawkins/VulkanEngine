@@ -3,37 +3,37 @@
 
 #include <ranges>
 
-void PhysicsSolver::RegisterCollider(ColliderComponent* _collider)
+void PhysicsSolver::RegisterObject(RigidbodyComponent* _rb)
 {
     // Get cell index for the new collider
-    const auto cellId = GetCellId(_collider);
+    const auto cellId = GetCellId(_rb);
     
     // Check if collider is already registered
-    const auto begin = m_colliderMap[cellId].begin();
-    const auto end = m_colliderMap[cellId].end();
+    const auto begin = m_objectMap[cellId].begin();
+    const auto end = m_objectMap[cellId].end();
 
-    const auto itr = std::find(begin, end, _collider);
+    const auto itr = std::find(begin, end, _rb);
     
     if (itr == end) // collider is not already registered
     {
-        m_colliderMap[cellId].push_back(_collider);
+        m_objectMap[cellId].push_back(_rb);
         m_colliderCount++;
     }
 }
 
-void PhysicsSolver::UnRegisterCollider(const ColliderComponent* _collider)
+void PhysicsSolver::UnRegisterObject(const RigidbodyComponent* _rb)
 {
-    const auto cellId = GetCellId(_collider);
+    const auto cellId = GetCellId(_rb);
 
     // Only remove the collider if it present at the cell id
-    const auto begin = m_colliderMap[cellId].begin();
-    const auto end = m_colliderMap[cellId].end();
+    const auto begin = m_objectMap[cellId].begin();
+    const auto end = m_objectMap[cellId].end();
 
-    const auto itr = std::find(begin, end, _collider);
+    const auto itr = std::find(begin, end, _rb);
 
     if (itr != end) // collider is registered
     {
-        m_colliderMap[cellId].erase(itr);
+        m_objectMap[cellId].erase(itr);
         m_colliderCount--;
     }
 }
@@ -56,9 +56,9 @@ void PhysicsSolver::Init()
         }
         while (delta < targetDelta);
 
-        for (const auto cell : m_colliderMap | std::views::keys)
+        for (const auto cell : m_objectMap | std::views::keys)
         {
-            UpdatePhysicsBodies(delta, cell);
+            UpdateCellId(cell);
             CheckForCollisions(cell);
         }
 
@@ -67,56 +67,50 @@ void PhysicsSolver::Init()
     }
 }
 
-void PhysicsSolver::UpdatePhysicsBodies(const float _deltaSeconds, const std::array<int, 3> _cellId)
+void PhysicsSolver::UpdateCellId(const std::array<int, 3> _cellId)
 {
-    for (int i = static_cast<int>(m_colliderMap[_cellId].size()) - 1; i >= 0; i--)
+    for (int i = static_cast<int>(m_objectMap[_cellId].size()) - 1; i >= 0; i--)
     {
-        auto collider = m_colliderMap[_cellId][i];
+        RigidbodyComponent* rb = m_objectMap[_cellId][i];
+        auto newCellId = GetCellId(rb);
 
-        collider->UpdateCollider(_deltaSeconds);
-        
-        auto newCellId = GetCellId(collider);
-
-        // Cell id after move does not match cell id before move
+        // Cell id this frame does not match last frame
         if (newCellId != _cellId)
         {
             // Remove from previous cell
-            auto itr = std::ranges::find(m_colliderMap[_cellId], collider);
-            if (itr != m_colliderMap[_cellId].end())
+            auto itr = std::ranges::find(m_objectMap[_cellId], rb);
+            if (itr != m_objectMap[_cellId].end())
             {
-                m_colliderMap[_cellId].erase(itr);
+                m_objectMap[_cellId].erase(itr);
                 i--;
             }
 
             // Add to new cell
-            m_colliderMap[newCellId].push_back(collider);
+            m_objectMap[newCellId].push_back(rb);
         }
     }
 }
 
 void PhysicsSolver::CheckForCollisions(const std::array<int, 3> _cellId)
 {
-    for (const auto collider1 : m_colliderMap[_cellId])
+    for (const auto rb1 : m_objectMap[_cellId])
     {
-        if (!collider1->m_kinematic) // if collider is static, don't check collision against other colliders
+        if (!rb1->IsKinematic()) // if collider is static, don't check collision against other colliders
         {
-            for (const auto collider2 : m_colliderMap[_cellId])
+            for (const auto rb2 : m_objectMap[_cellId])
             {
-                if (collider1 != collider2) // don't check collision against itself
+                if (rb1 != rb2) // don't check collision against itself
                 {
-                    collider1->CheckForCollision(collider2);
+                    rb1->CheckCollision(rb2);
                 }
             }
         }
-
-        // After checking collisions with other objects, clear collision list
-        collider1->ClearPreviousCollisions();
     }
 }
 
-std::array<int, 3> PhysicsSolver::GetCellId(const ColliderComponent* _collider) const
+std::array<int, 3> PhysicsSolver::GetCellId(const RigidbodyComponent* _rb) const
 {
-    const glm::vec3 worldPos = _collider->transform.GetWorldPosition();
+    const glm::vec3 worldPos = _rb->transform.GetWorldPosition();
     
     std::array<int, 3> cellId;
     cellId[0] = static_cast<int>(worldPos.x) / m_cellSize[0];
