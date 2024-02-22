@@ -11,14 +11,14 @@ GravityGameObject::GravityGameObject()
     m_rb = ObjectComponent::CreateComponent<RigidbodyComponent>("Gravity");
     // m_coll->SetVelocity(glm::vec3(0, 0, -1));
     m_rb->SetUsingGravity(true);
-    m_rb->SetType(CT_SPHERE);
+    m_rb->SetType(CT_CUBE);
     SetRoot(m_rb);
     
     // Initialize mesh component
     m_meshComponent = ObjectComponent::CreateComponent<MeshComponent>("Mesh");
     m_meshComponent->AttachTo(m_rb);
 
-    m_meshComponent->SetMesh(Renderer::GetInstance()->GetMesh("sphere"));
+    m_meshComponent->SetMesh(Renderer::GetInstance()->GetMesh("cube"));
     m_meshComponent->SetMaterial(Renderer::GetInstance()->GetMaterial("house"));
 }
 

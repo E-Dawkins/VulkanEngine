@@ -1,6 +1,8 @@
 ﻿#include "pch.h"
 #include "RigidbodyComponent.h"
 
+#include <vector>
+
 #include "Material_Base.h"
 #include "Mesh.h"
 #include "PhysicsSolver.h"
@@ -42,7 +44,7 @@ void RigidbodyComponent::TickComponent(float _deltaSeconds)
 
     if (m_useGravity)
     {
-        ApplyForce(g_gravity * _deltaSeconds, glm::vec3(0));
+        m_linearVelocity += (g_gravity * _deltaSeconds) / GetMass();
     }
 
     const glm::quat qOld = transform.GetWorldRotation();
@@ -101,26 +103,22 @@ void RigidbodyComponent::ResolveCollision(RigidbodyComponent* _otherRb, glm::vec
     float constraintMass =
         ((1.f / GetMass()) + (1.f / _otherRb->GetMass())) +
             dot(normal,
-                cross(inverse(GetMoment())
-                * cross(rA, normal), rA) +
-                cross(inverse(_otherRb->GetMoment())
-                * cross(rB, normal), rB)
+                cross(cross(rA, normal), rA) / GetMoment() +
+                cross(cross(rB, normal), rB) / _otherRb->GetMoment()
             );
 
     if (constraintMass > 0.f)
     {
         float jn = max(-dot(dv, normal) + combinedElasticity, 0.f);
         jn /= constraintMass;
-        
-        m_linearVelocity -= normal * (jn / GetMass());
-        _otherRb->m_linearVelocity += normal * (jn / _otherRb->GetMass());
-        
-        m_angularVelocity -= inverse(GetMoment()) * cross(rA, normal * jn);
-        _otherRb->m_angularVelocity += inverse(_otherRb->GetMoment()) * cross(rB, normal * jn);
+
+        ApplyImpulse(-jn * normal, rA);
+        _otherRb->ApplyImpulse(jn * normal, rB);
     }
 
     // Friction - this is where most of the angular velocity gets applied based on the friction between the objects.
-    glm::vec3 tangent = dv - normal * dot(dv, normal);
+    // glm::vec3 tangent = dv - normal * dot(dv, normal);
+    glm::vec3 tangent = MathHelpers::GetTangentToVector(normal);
     float tanLength = length(tangent);
 
     if (tanLength > 0)
@@ -129,8 +127,8 @@ void RigidbodyComponent::ResolveCollision(RigidbodyComponent* _otherRb, glm::vec
 
         float frictionalMass = ((1.f / GetMass()) + (1.f / _otherRb->GetMass())) +
             dot(tangent,
-                cross(inverse(GetMoment()) * cross(rA, tangent), rA) +
-                cross(inverse(_otherRb->GetMoment()) * cross(rB, tangent), rB)
+                cross(cross(rA, tangent), rA) / GetMoment() +
+                cross(cross(rB, tangent), rB) / _otherRb->GetMoment()
             );
 
         if (frictionalMass > 0.f)
@@ -140,11 +138,8 @@ void RigidbodyComponent::ResolveCollision(RigidbodyComponent* _otherRb, glm::vec
 
             jt /= frictionalMass;
 
-            m_linearVelocity -= tangent * (jt / GetMass());
-            _otherRb->m_linearVelocity += tangent * (jt / _otherRb->GetMass());
-
-            m_angularVelocity -= inverse(GetMoment()) * cross(rA, tangent * jt);
-            _otherRb->m_angularVelocity += inverse(_otherRb->GetMoment()) * cross(rB, tangent * jt);
+            ApplyImpulse(-jt * tangent, rA);
+            _otherRb->ApplyImpulse(jt * tangent, rB);
         }
     }
 
@@ -154,10 +149,10 @@ void RigidbodyComponent::ResolveCollision(RigidbodyComponent* _otherRb, glm::vec
     }
 }
 
-void RigidbodyComponent::ApplyForce(glm::vec3 _force, glm::vec3 _pos)
+void RigidbodyComponent::ApplyImpulse(const glm::vec3 _impulse, const glm::vec3 _contactVector)
 {
-    m_linearVelocity += _force / GetMass();
-    m_angularVelocity += inverse(GetMoment()) * cross(_force, _pos);
+    m_linearVelocity += _impulse / GetMass();
+    m_angularVelocity += cross(_contactVector, _impulse) / GetMoment();
 }
 
 void RigidbodyComponent::ApplyContactForces(RigidbodyComponent* _otherRb, glm::vec3 _normal, float _penetration)
@@ -199,11 +194,11 @@ void RigidbodyComponent::SetupMesh()
 
 bool RigidbodyComponent::Sphere2Sphere(RigidbodyComponent* _otherRb, glm::vec3& _contactPt, glm::vec3& _normal, float& _penetration)
 {
-    float r1 = MathHelpers::MinComponent(transform.GetWorldScale());
-    float r2 = MathHelpers::MinComponent(_otherRb->transform.GetWorldScale());
+    const float r1 = MathHelpers::MinComponent(transform.GetWorldScale());
+    const float r2 = MathHelpers::MinComponent(_otherRb->transform.GetWorldScale());
 
-    glm::vec3 toOther = _otherRb->transform.GetWorldPosition() - transform.GetWorldPosition();
-    float dist = length(toOther);
+    const glm::vec3 toOther = _otherRb->transform.GetWorldPosition() - transform.GetWorldPosition();
+    const float dist = length(toOther);
 
     if (dist > r1 + r2)
     {
@@ -225,8 +220,44 @@ bool RigidbodyComponent::Sphere2Cube(RigidbodyComponent* _otherRb, glm::vec3& _c
 
 bool RigidbodyComponent::Cube2Cube(RigidbodyComponent* _otherRb, glm::vec3& _contactPt, glm::vec3& _normal, float& _penetration)
 {
-    std::cout << "Cube2Cube not implemented!" << std::endl;
-    return false;
+    const glm::vec3 cube1Extents = transform.GetWorldRotation() * transform.GetWorldScale() * conjugate(transform.GetWorldRotation());
+    const glm::vec3 cube2Extents = _otherRb->transform.GetWorldRotation() * _otherRb->transform.GetWorldScale() * conjugate(_otherRb->transform.GetWorldRotation());
+    
+    const std::vector<glm::vec3> cube1Corners = MathHelpers::GetCubeCorners(transform.GetWorldPosition(), cube1Extents);
+    const std::vector<glm::vec3> cube2Corners = MathHelpers::GetCubeCorners(_otherRb->transform.GetWorldPosition(), cube2Extents);
+
+    const std::vector normals =
+    {
+        transform.GetLocalRight(),
+        transform.GetLocalForward(),
+        transform.GetLocalUp(),
+        _otherRb->transform.GetLocalRight(),
+        _otherRb->transform.GetLocalForward(),
+        _otherRb->transform.GetLocalUp(),
+        normalize(cross(transform.GetLocalRight(), _otherRb->transform.GetLocalRight())),
+        normalize(cross(transform.GetLocalRight(), _otherRb->transform.GetLocalForward())),
+        normalize(cross(transform.GetLocalRight(), _otherRb->transform.GetLocalUp())),
+        normalize(cross(transform.GetLocalForward(), _otherRb->transform.GetLocalRight())),
+        normalize(cross(transform.GetLocalForward(), _otherRb->transform.GetLocalForward())),
+        normalize(cross(transform.GetLocalForward(), _otherRb->transform.GetLocalUp())),
+        normalize(cross(transform.GetLocalUp(), _otherRb->transform.GetLocalRight())),
+        normalize(cross(transform.GetLocalUp(), _otherRb->transform.GetLocalForward())),
+        normalize(cross(transform.GetLocalUp(), _otherRb->transform.GetLocalUp()))
+    };
+    
+    FindAxisLeastPenetration(normals, transform.GetWorldPosition(), cube2Corners, _normal, _penetration);
+    _penetration = length(_normal * cube1Extents) - _penetration;
+
+    if (_penetration <= 0.f)
+    {
+        return false;
+    }
+
+    glm::vec3 pt1 = transform.GetWorldPosition() + _normal * _penetration;
+    glm::vec3 pt2 = _otherRb->transform.GetWorldPosition() - _normal * _penetration;
+    _contactPt = (pt1 + pt2) / 2.f;
+    
+    return true;
 }
 
 bool RigidbodyComponent::Cube2Sphere(RigidbodyComponent* _otherRb, glm::vec3& _contactPt, glm::vec3& _normal, float& _penetration)
@@ -235,24 +266,91 @@ bool RigidbodyComponent::Cube2Sphere(RigidbodyComponent* _otherRb, glm::vec3& _c
     return false;
 }
 
+glm::vec3 RigidbodyComponent::GetSupportPoint(glm::vec3 _axis, std::vector<glm::vec3> _points)
+{
+    float bestProjection = -FLT_MAX;
+    glm::vec3 bestVertex;
+
+    for (glm::vec3 pt : _points)
+    {
+        const float dotVal = dot(pt, _axis);
+        if (dotVal > bestProjection)
+        {
+            bestVertex = pt;
+            bestProjection = dotVal;
+        }
+    }
+
+    return bestVertex;
+}
+
+void RigidbodyComponent::FindAxisLeastPenetration(std::vector<glm::vec3> _possibleAxes, glm::vec3 _posA,
+                                                  std::vector<glm::vec3> _pointsB, glm::vec3& _normal,
+                                                  float& _penetration)
+{
+    _penetration = -FLT_MAX;
+
+    for (int i = 0; i < _possibleAxes.size(); i++)
+    {
+        glm::vec3 n = _possibleAxes[i];
+        
+        glm::vec3 s = GetSupportPoint(-n, _pointsB);
+
+        const float d = dot(n, s - _posA);
+
+        if (d > _penetration)
+        {
+            _penetration = d;
+            _normal = n;
+        }
+    }
+}
+
+void RigidbodyComponent::SATTest(const glm::vec3 _axis, const std::vector<glm::vec3> _points, float& _minOnAxis,
+                                 float& _maxOnAxis)
+{
+    _minOnAxis = FLT_MAX;
+    _maxOnAxis = -FLT_MAX;
+
+    for (glm::vec3 pt : _points)
+    {
+        const float dotVal = dot(pt, _axis);
+        if (dotVal < _minOnAxis) _minOnAxis = dotVal;
+        if (dotVal > _maxOnAxis) _maxOnAxis = dotVal;
+    }
+}
+
 glm::mat3 RigidbodyComponent::GetMoment() const
 {
-    glm::mat3 moment(1);
-
     if (m_isKinematic)
     {
+        return glm::mat3(1);
+    }
+
+    if (m_type == CT_SPHERE)
+    {
+        const float radius = MathHelpers::MinComponent(transform.GetWorldScale());
+        return glm::mat3(1) * (2.f / 5.f) * GetMass() * powf(radius, 2.f);
+    }
+
+    if (m_type == CT_CUBE)
+    {
+        const glm::vec3 extents = transform.GetWorldRotation() * transform.GetWorldScale()
+                        * conjugate(transform.GetWorldRotation());
+        const float inertia = (1.f / 12.f) * GetMass();
+
+        glm::mat3 moment(1);
+        moment[0].x = inertia * (powf(extents.y, 2.f) + powf(extents.z, 2.f));
+        moment[1].y = inertia * (powf(extents.x, 2.f) + powf(extents.z, 2.f));
+        moment[2].z = inertia * (powf(extents.x, 2.f) + powf(extents.y, 2.f));
+        
         return moment;
     }
 
-    switch(m_type)
-    {
-        case CT_SPHERE: moment *= (2.f / 5.f) * GetMass() * powf(MathHelpers::MinComponent(transform.GetWorldScale()), 2.f); break;
-    }
-    
-    return moment;
+    return glm::mat3(1); // should never get here
 }
 
-glm::mat4 RigidbodyComponent::GetRigidbodyMatrix()
+glm::mat4 RigidbodyComponent::GetRigidbodyMatrix() const
 {
     // Sphere is the exception, the radius is the minimum of its' scale
     if (m_type == CT_SPHERE)
