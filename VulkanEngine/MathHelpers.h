@@ -61,4 +61,21 @@ public:
 
         return c2;
     }
+
+    static glm::vec3 GetAveragePoint(const std::vector<glm::vec3> _points)
+    {
+        glm::vec3 sum(0);
+
+        for (const glm::vec3 pt : _points)
+        {
+            sum += pt;
+        }
+        
+        return sum / static_cast<float>(_points.size());
+    }
+
+    static glm::vec3 ProjectPointOnPlane(glm::vec3 _pNormal, glm::vec3 _pOrigin, glm::vec3 _pointToProject)
+    {
+        return _pointToProject - dot(_pNormal, _pointToProject - _pOrigin) * _pNormal;
+    }
 };

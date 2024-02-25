@@ -35,13 +35,13 @@ int main()
     std::vector<GameObject*> gameObjects;
     
     gameObjects.push_back(new GravityGameObject());
-    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(0, 0.95f, 3));
+    gameObjects.back()->GetRoot()->transform.SetWorldPosition(glm::vec3(0, 0.9f, 3));
     gameObjects.back()->GetRoot()->transform.SetWorldScale(glm::vec3(0.5f));
-    // gameObjects.back()->GetRoot()->transform.SetWorldRotation(rotate(glm::quat(1, 0, 0, 0), glm::radians(15.f), g_upVector));
+    gameObjects.back()->GetRoot()->transform.SetWorldRotation(rotate(glm::quat(1, 0, 0, 0), glm::radians(12.f), g_rightVector));
     
     gameObjects.push_back(new TestGameObject());
     gameObjects.back()->GetRoot()->transform.SetWorldScale(glm::vec3(0.5f, 0.5f, 0.5f));
-    // gameObjects.back()->GetRoot()->transform.SetWorldRotation(rotate(glm::quat(1, 0, 0, 0), glm::radians(15.f), g_upVector));
+    gameObjects.back()->GetRoot()->transform.SetWorldRotation(rotate(glm::quat(1, 0, 0, 0), glm::radians(15.f), g_upVector));
     
     for (const auto object : gameObjects)
     {

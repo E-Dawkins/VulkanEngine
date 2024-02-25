@@ -171,6 +171,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Cube.cpp" />
     <ClCompile Include="GravityGameObject.cpp" />
     <ClCompile Include="Material_Base.cpp" />
     <ClCompile Include="main.cpp">
@@ -209,6 +210,7 @@
     <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Cube.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GlobalConstants.h" />
     <ClInclude Include="GravityGameObject.h" />

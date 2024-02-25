@@ -59,12 +59,6 @@ private:
     bool Sphere2Cube(RigidbodyComponent* _otherRb, glm::vec3& _contactPt, glm::vec3& _normal, float& _penetration);
     bool Cube2Cube(RigidbodyComponent* _otherRb, glm::vec3& _contactPt, glm::vec3& _normal, float& _penetration);
     bool Cube2Sphere(RigidbodyComponent* _otherRb, glm::vec3& _contactPt, glm::vec3& _normal, float& _penetration);
-
-    glm::vec3 GetSupportPoint(glm::vec3 _axis, std::vector<glm::vec3> _points);
-    void FindAxisLeastPenetration(std::vector<glm::vec3> _possibleAxes, glm::vec3 _posA,
-                                  std::vector<glm::vec3> _pointsB, glm::vec3& _normal, float&
-                                  _penetration);
-    void SATTest(glm::vec3 _axis, std::vector<glm::vec3> _points, float& _minOnAxis, float& _maxOnAxis);
     
     glm::mat3 GetMoment() const;
     glm::mat4 GetRigidbodyMatrix() const;
